@@ -332,6 +332,10 @@
             class="bg-green-600 text-white px-4 py-2 rounded-lg">
         Teste Sucesso
     </button>
+    <button onclick="showError('Erro!', 'Transação salva com sucesso')" 
+            class="bg-red-600 text-white px-4 py-2 rounded-lg">
+        Teste Sucesso
+    </button>
     
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
      <script>

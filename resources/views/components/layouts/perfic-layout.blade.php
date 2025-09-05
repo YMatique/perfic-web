@@ -433,8 +433,5 @@
     </style>
     <!-- Toast Notifications -->
 
-<script>
-    showSuccess('Teste direto', 'Forçado pelo console');
-</script>
 </body>
 </html>
