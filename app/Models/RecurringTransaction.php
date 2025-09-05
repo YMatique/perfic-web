@@ -124,6 +124,6 @@ class RecurringTransaction extends Model
 
     public function getFormattedAmountAttribute()
     {
-        return 'R$ ' . number_format($this->amount, 2, ',', '.');
+        return 'MZN ' . number_format($this->amount, 2, ',', '.');
     }
 }
