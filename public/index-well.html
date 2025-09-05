@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfic - Personal Finance Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        },
+                        success: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        danger: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        }
+                    },
+                    lineHeight: {
+                        'normal': '1.6',
+                    },
+                    fontWeight: {
+                        'normal': '400',
+                    }
+                }
+            }
+        }
+
+        // Theme toggle function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        // Sidebar toggle functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                sidebar.classList.remove('collapsed');
+                sidebar.style.width = '14rem';
+                document.getElementById('main-content').style.marginLeft = 'calc(14rem + 1rem)';
+            } else {
+                sidebar.classList.add('collapsed');
+                sidebar.style.width = '4rem';
+                document.getElementById('main-content').style.marginLeft = 'calc(4rem + 1rem)';
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (mobileSidebar.classList.contains('hidden')) {
+                mobileSidebar.classList.remove('hidden');
+                overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                mobileSidebar.classList.add('hidden');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close mobile sidebar when clicking overlay
+        function closeMobileSidebar() {
+            document.getElementById('mobile-sidebar').classList.add('hidden');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Mobile navbar toggle
+        function toggleMobileNavbar() {
+            const mobileNav = document.getElementById('mobile-navbar');
+            mobileNav.classList.toggle('hidden');
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', initTheme);
+    </script>
+</head>
+
+<body class="font-inter bg-gray-50 dark:bg-zinc-900 min-h-screen text-gray-900 dark:text-zinc-100 leading-normal font-normal">
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="closeMobileSidebar()"></div>
+    
+    <!-- Desktop Sidebar -->
+    <div id="sidebar" style="margin: 0.5rem 0rem 0.5rem 0.5rem; width: 14rem; transition: width 0.3s ease;"
+        class="fixed inset-y-0 left-0 rounded-lg z-50 bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 hidden lg:block">
+        
+        <!-- Logo -->
+        <div class="flex items-center h-16 px-6 border-b border-gray-200 dark:border-zinc-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-white text-lg">trending_up</span>
+                </div>
+                <h1 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 sidebar-text">Perfic</h1>
+            </div>
+            <!-- Collapse Button -->
+            <button onclick="toggleSidebar()" class="ml-auto p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
+                <span class="material-icons text-gray-500 dark:text-zinc-400 text-lg">menu</span>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="mt-2 px-3">
+            <div class="space-y-1">
+                <a href="#" class="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg border-r-2 border-primary-500 mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">dashboard</span>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">swap_horiz</span>
+                    <span class="sidebar-text">Transações</span>
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">pie_chart</span>
+                    <span class="sidebar-text">Relatórios</span>
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">category</span>
+                    <span class="sidebar-text">Categorias</span>
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">flag</span>
+                    <span class="sidebar-text">Metas</span>
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg mx-0.5 my-0.5">
+                    <span class="material-icons mr-3 text-lg">psychology</span>
+                    <span class="sidebar-text">Insights IA</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-zinc-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">JS</span>
+                </div>
+                <div class="flex-1 min-w-0 sidebar-text">
+                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100 truncate">João Silva</p>
+                    <p class="text-xs text-gray-500 dark:text-zinc-400 truncate">joao@email.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-zinc-800 shadow-lg transform transition-transform lg:hidden hidden">
+        <!-- Logo -->
+        <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-zinc-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-white text-lg">trending_up</span>
+                </div>
+                <h1 class="text-lg font-semibold text-gray-800 dark:text-zinc-100">Perfic</h1>
+            </div>
+            <button onclick="closeMobileSidebar()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
+                <span class="material-icons text-gray-500 dark:text-zinc-400">close</span>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <nav class="mt-4 px-4">
+            <div class="space-y-2">
+                <a href="#" class="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">swap_horiz</span>
+                    Transações
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">pie_chart</span>
+                    Relatórios
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">category</span>
+                    Categorias
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">flag</span>
+                    Metas
+                </a>
+                <a href="#" class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                    <span class="material-icons mr-3 text-lg">psychology</span>
+                    Insights IA
+                </a>
+            </div>
+        </nav>
+
+        <!-- Mobile User Profile -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-zinc-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">JS</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100 truncate">João Silva</p>
+                    <p class="text-xs text-gray-500 dark:text-zinc-400 truncate">joao@email.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="lg:ml-56 flex-1 transition-all duration-300" style="margin-left: calc(14rem + 1rem); margin-top: 0.5rem;">
+        
+        <!-- Top Navigation Bar -->
+        <nav class="bg-white dark:bg-zinc-800 shadow-sm border border-gray-200 dark:border-zinc-700 rounded-lg mx-2 lg:mx-0">
+            <div class="px-4 lg:px-6 py-2">
+                <div class="flex items-center justify-between">
+                    
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
+                        <span class="material-icons text-gray-500 dark:text-zinc-400">menu</span>
+                    </button>
+                    
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="hidden lg:block">
+                        <ol class="flex items-center space-x-2 text-sm">
+                            <li>
+                                <a href="#" class="text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">Páginas</a>
+                            </li>
+                            <li class="text-gray-400 dark:text-zinc-500">/</li>
+                            <li class="text-gray-900 dark:text-zinc-100 font-medium">Dashboard</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Mobile Navbar Toggle -->
+                    <button onclick="toggleMobileNavbar()" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700">
+                        <span class="material-icons text-gray-500 dark:text-zinc-400">more_vert</span>
+                    </button>
+
+                    <!-- Desktop Right side -->
+                    <div class="hidden lg:flex items-center space-x-4">
+                        <!-- Search -->
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar..." class="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none focus:border-primary-500">
+                        </div>
+
+                        <!-- Theme Toggle -->
+                        <button onclick="toggleTheme()" class="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 focus:outline-none">
+                            <span class="material-icons text-lg">dark_mode</span>
+                        </button>
+
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button class="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 focus:outline-none">
+                                <span class="material-icons text-lg">notifications</span>
+                                <span class="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span>
+                            </button>
+                        </div>
+
+                        <!-- Settings -->
+                        <button class="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 focus:outline-none">
+                            <span class="material-icons text-lg">settings</span>
+                        </button>
+
+                        <!-- Profile -->
+                        <button class="p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 focus:outline-none">
+                            <span class="material-icons text-lg">account_circle</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Navbar Items -->
+                <div id="mobile-navbar" class="lg:hidden hidden mt-4 pb-4 border-t border-gray-200 dark:border-zinc-700 pt-4">
+                    <div class="space-y-4">
+                        <!-- Mobile Search -->
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar..." class="w-full px-4 py-2 text-sm border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none focus:border-primary-500">
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <!-- Theme Toggle -->
+                            <button onclick="toggleTheme()" class="flex items-center space-x-2 p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">
+                                <span class="material-icons">dark_mode</span>
+                                <span class="text-sm">Tema</span>
+                            </button>
+
+                            <!-- Notifications -->
+                            <button class="flex items-center space-x-2 p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">
+                                <div class="relative">
+                                    <span class="material-icons">notifications</span>
+                                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-danger-500 rounded-full"></span>
+                                </div>
+                                <span class="text-sm">Notificações</span>
+                            </button>
+
+                            <!-- Settings -->
+                            <button class="flex items-center space-x-2 p-2 text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">
+                                <span class="material-icons">settings</span>
+                                <span class="text-sm">Configurações</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <header class="p-4 lg:p-6">
+            <div>
+                <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-zinc-100">Dashboard</h2>
+                <p class="text-sm text-gray-600 dark:text-zinc-400 mt-1">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="px-4 lg:px-6 pb-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <!-- Saldo Total -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-zinc-400">Saldo Total</p>
+                            <p class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-zinc-100 mt-1">MZN 45.230,50</p>
+                            <div class="flex items-center mt-2">
+                                <span class="material-icons text-success-500 text-sm">trending_up</span>
+                                <span class="text-success-600 dark:text-success-400 text-sm font-medium ml-1">+12,5%</span>
+                                <span class="text-gray-500 dark:text-zinc-400 text-xs lg:text-sm ml-2">vs mês anterior</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-success-500 to-success-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons text-white text-lg lg:text-xl">account_balance_wallet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receitas -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-zinc-400">Receitas (Março)</p>
+                            <p class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-zinc-100 mt-1">MZN 35.000,00</p>
+                            <div class="flex items-center mt-2">
+                                <span class="material-icons text-success-500 text-sm">trending_up</span>
+                                <span class="text-success-600 dark:text-success-400 text-sm font-medium ml-1">+5,2%</span>
+                                <span class="text-gray-500 dark:text-zinc-400 text-xs lg:text-sm ml-2">vs fevereiro</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-success-500 to-success-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons text-white text-lg lg:text-xl">arrow_upward</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gastos -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-zinc-400">Gastos (Março)</p>
+                            <p class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-zinc-100 mt-1">MZN 22.150,00</p>
+                            <div class="flex items-center mt-2">
+                                <span class="material-icons text-danger-500 text-sm">trending_down</span>
+                                <span class="text-danger-600 dark:text-danger-400 text-sm font-medium ml-1">+8,1%</span>
+                                <span class="text-gray-500 dark:text-zinc-400 text-xs lg:text-sm ml-2">vs fevereiro</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-danger-500 to-danger-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons text-white text-lg lg:text-xl">arrow_downward</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Financeiro -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-zinc-400">Score Financeiro</p>
+                            <p class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-zinc-100 mt-1">87/100</p>
+                            <div class="flex items-center mt-2">
+                                <div class="w-full bg-gray-200 dark:bg-zinc-600 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-success-500 to-success-600 h-2 rounded-full" style="width: 87%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-warning-500 to-warning-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons text-white text-lg lg:text-xl">emoji_events</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Insights Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <!-- Spending Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <div class="flex items-center justify-between mb-4 lg:mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Gastos por Categoria</h3>
+                        <select class="text-sm border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:border-primary-500">
+                            <option>Últimos 30 dias</option>
+                            <option>Últimos 3 meses</option>
+                            <option>Este ano</option>
+                        </select>
+                    </div>
+                    <div class="h-64 lg:h-80">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI Insights -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100 dark:border-zinc-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-4 lg:mb-6">Insights IA</h3>
+                    <div class="space-y-4">
+                        <!-- Insight 1 -->
+                        <div class="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-lg p-3 lg:p-4 border-l-4 border-primary-500">
+                            <div class="flex items-start">
+                                <span class="material-icons text-primary-600 dark:text-primary-400 mr-3">lightbulb</span>
+                                <div>
+                                    <h4 class="text-sm font-medium text-primary-900 dark:text-primary-100">Dica de Economia</h4>
+                                    <p class="text-sm text-primary-700 dark:text-primary-200 mt-1">Você gastou 23% a mais em alimentação este mês. Considere cozinhar mais em casa.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insight 2 -->
+                        <div class="bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/20 dark:to-warning-800/20 rounded-lg p-3 lg:p-4 border-l-4 border-warning-500">
+                            <div class="flex items-start">
+                                <span class="material-icons text-warning-600 dark:text-warning-400 mr-3">warning</span>
+                                <div>
+                                    <h4 class="text-sm font-medium text-warning-900 dark:text-warning-100">Meta em Risco</h4>
+                                    <p class="text-sm text-warning-700 dark:text-warning-200 mt-1">Você já usou 78% da sua meta de gastos para este mês.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insight 3 -->
+                        <div class="bg-gradient-to-r from-success-50 to-success-100 dark:from-success-900/20 dark:to-success-800/20 rounded-lg p-3 lg:p-4 border-l-4 border-success-500">
+                            <div class="flex items-start">
+                                <span class="material-icons text-success-600 dark:text-success-400 mr-3">check_circle</span>
+                                <div>
+                                    <h4 class="text-sm font-medium text-success-900 dark:text-success-100">Parabéns!</h4>
+                                    <p class="text-sm text-success-700 dark:text-success-200 mt-1">Você economizou MZN 2.500 comparado ao mês passado.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions and Goals -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <!-- Transactions List -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                    <div class="p-4 lg:p-6 border-b border-gray-200 dark:border-zinc-700">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Transações Recentes</h3>
+                            <a href="#" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium">Ver todas</a>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200 dark:divide-zinc-700">
+                        <!-- Transaction 1 -->
+                        <div class="p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-zinc-700/50">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-danger-100 dark:bg-danger-900/30 rounded-lg flex items-center justify-center">
+                                    <span class="material-icons text-danger-600 dark:text-danger-400">shopping_cart</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Compras no Supermercado</p>
+                                    <p class="text-sm text-gray-500 dark:text-zinc-400">Alimentação • Hoje, 14:30</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-danger-600 dark:text-danger-400">-MZN 1.250,00</p>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 mt-1">
+                                        Confirmada
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transaction 2 -->
+                        <div class="p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-zinc-700/50">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-success-100 dark:bg-success-900/30 rounded-lg flex items-center justify-center">
+                                    <span class="material-icons text-success-600 dark:text-success-400">work</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Salário</p>
+                                    <p class="text-sm text-gray-500 dark:text-zinc-400">Trabalho • Ontem, 09:00</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-success-600 dark:text-success-400">+MZN 35.000,00</p>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 mt-1">
+                                        Confirmada
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transaction 3 -->
+                        <div class="p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-zinc-700/50">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-warning-100 dark:bg-warning-900/30 rounded-lg flex items-center justify-center">
+                                    <span class="material-icons text-warning-600 dark:text-warning-400">local_gas_station</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Combustível</p>
+                                    <p class="text-sm text-gray-500 dark:text-zinc-400">Transporte • 2 dias atrás</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-danger-600 dark:text-danger-400">-MZN 850,00</p>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 mt-1">
+                                        Pendente
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals Progress -->
+                <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                    <div class="p-4 lg:p-6 border-b border-gray-200 dark:border-zinc-700">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100">Progresso das Metas</h3>
+                            <a href="#" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium">Gerenciar</a>
+                        </div>
+                    </div>
+                    <div class="p-4 lg:p-6 space-y-6">
+                        <!-- Goal 1 -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Meta de Economia</p>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400">MZN 8.500 / MZN 10.000</p>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-zinc-600 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-success-500 to-success-600 h-3 rounded-full" style="width: 85%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-2">85% concluída</p>
+                        </div>
+
+                        <!-- Goal 2 -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Limite Alimentação</p>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400">MZN 3.900 / MZN 5.000</p>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-zinc-600 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-warning-500 to-warning-600 h-3 rounded-full" style="width: 78%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-2">78% utilizada</p>
+                        </div>
+
+                        <!-- Goal 3 -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">Fundo de Emergência</p>
+                                <p class="text-sm text-gray-500 dark:text-zinc-400">MZN 2.200 / MZN 15.000</p>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-zinc-600 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full" style="width: 15%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-zinc-400 mt-2">15% concluída</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Transaction Button -->
+            <div class="fixed bottom-6 right-6">
+                <button onclick="openModal()" class="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl focus:outline-none">
+                    <span class="material-icons text-lg lg:text-xl">add</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transactionModal" class="fixed inset-0 z-50 hidden bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-80 lg:w-96 shadow-lg rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700">
+            <div class="mt-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100 text-center">Nova Transação</h3>
+                <div class="mt-6 space-y-4">
+                    <!-- Type Selection -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="px-4 py-3 bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300 border-2 border-success-200 dark:border-success-700 rounded-lg font-medium hover:bg-success-100 dark:hover:bg-success-900/30">
+                            <span class="material-icons mr-2">add_circle</span>Receita
+                        </button>
+                        <button class="px-4 py-3 bg-gray-50 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 border-2 border-gray-200 dark:border-zinc-600 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-zinc-600">
+                            <span class="material-icons mr-2">remove_circle</span>Gasto
+                        </button>
+                    </div>
+
+                    <!-- Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Valor</label>
+                        <input type="number" class="w-full border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:border-primary-500" placeholder="0,00">
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Categoria</label>
+                        <select class="w-full border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:border-primary-500">
+                            <option>Selecione uma categoria</option>
+                            <option>Alimentação</option>
+                            <option>Transporte</option>
+                            <option>Saúde</option>
+                        </select>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Descrição</label>
+                        <input type="text" class="w-full border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:border-primary-500" placeholder="Descrição da transação">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 dark:bg-zinc-600 text-gray-700 dark:text-zinc-300 rounded-lg hover:bg-gray-400 dark:hover:bg-zinc-500">
+                        Cancelar
+                    </button>
+                    <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart initialization
+        const ctx = document.getElementById('spendingChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Outros'],
+                datasets: [{
+                    data: [3900, 1200, 800, 950, 1300],
+                    backgroundColor: [
+                        '#EF4444',
+                        '#F59E0B',
+                        '#10B981',
+                        '#6366F1',
+                        '#8B5CF6'
+                    ],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            color: document.documentElement.classList.contains('dark') ? '#e4e4e7' : '#374151'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('transactionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('transactionModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Add CSS for sidebar collapse
+        const style = document.createElement('style');
+        style.textContent = `
+            .collapsed .sidebar-text {
+                display: none;
+            }
+            .collapsed {
+                width: 4rem !important;
+            }
+            .collapsed nav a {
+                justify-content: center;
+            }
+            .collapsed .material-icons {
+                margin-right: 0 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
