@@ -111,6 +111,15 @@ window.showWarning = function(title, message = '') {
 window.showInfo = function(title, message = '') {
     window.showToast({ type: 'info', title, message });
 };
+
+
+// Listener para eventos Livewire
+document.addEventListener('livewire:init', () => {
+    Livewire.on('toast', (data) => {
+        const toastData = Array.isArray(data) ? data[0] : data;
+        showToast(toastData);
+    });
+});
 </script>
 
 <style>
