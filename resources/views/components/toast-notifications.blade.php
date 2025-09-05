@@ -2,7 +2,7 @@
 
 <div x-data="toastManager()" 
      @toast.window="addToast($event.detail)"
-     class="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+     class="fixed top-4 right-4 z-[9999] space-y-2 max-w-sm">
     
     <template x-for="toast in toasts" :key="toast.id">
         <div x-show="toast.visible"
@@ -93,12 +93,16 @@
 
 @once
 <script>
+
 function toastManager() {
+    
+
     return {
         toasts: [],
         nextId: 1,
         
         addToast(data) {
+            
             const toast = {
                 id: this.nextId++,
                 type: data.type || 'info',
@@ -117,7 +121,7 @@ function toastManager() {
                 if (toast.duration > 0) {
                     setTimeout(() => {
                         toast.progress = 0;
-                    }, 100);
+                    }, 1000);
                     
                     setTimeout(() => {
                         this.removeToast(toast.id);

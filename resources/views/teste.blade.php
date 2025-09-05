@@ -328,10 +328,15 @@
             </div>
         </div>
     </div>
-
+  <button onclick="showSuccess('Sucesso!', 'Transação salva com sucesso')" 
+            class="bg-green-600 text-white px-4 py-2 rounded-lg">
+        Teste Sucesso
+    </button>
+    
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
      <script>
         // Chart initialization
+        
         const ctx = document.getElementById('spendingChart').getContext('2d');
         new Chart(ctx, {
             type: 'doughnut',

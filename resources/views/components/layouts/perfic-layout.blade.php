@@ -372,9 +372,9 @@
             <span class="material-icons text-xl">add</span>
         </button>
     </div>
-
+<x-toast-notifications />
     @fluxScripts
-    
+    @yield('scripts')
     <script>
         function appLayout() {
             return {
@@ -431,5 +431,10 @@
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
+    <!-- Toast Notifications -->
+
+<script>
+    showSuccess('Teste direto', 'Forçado pelo console');
+</script>
 </body>
 </html>
