@@ -32,52 +32,6 @@ return new class extends Migration
         });
     }
 
-
-    
-
-        
-
-     Schema::create('ai_insights', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
-        $table->enum('type', ['spending_alert', 'savings_tip', 'pattern_detected', 'goal_progress', 'budget_warning', 'anomaly_detected']);
-        $table->string('title');
-        $table->text('message');
-        $table->foreignId('related_category_id')->nullable()->constrained('categories')->onDelete('cascade');
-        $table->foreignId('related_goal_id')->nullable()->constrained('goals')->onDelete('cascade');
-        $table->decimal('impact_value', 10, 2)->nullable();
-        $table->enum('priority', ['low', 'medium', 'high', 'urgent']);
-        $table->boolean('is_read')->default(false);
-        $table->boolean('is_actionable')->default(false);
-        $table->json('action_data')->nullable(); // suggested actions
-        $table->timestamp('expires_at')->nullable();
-        $table->timestamps();
-        
-        $table->index(['tenant_id', 'is_read', 'priority']);
-        $table->index(['tenant_id', 'created_at']);
-        $table->index(['expires_at']);
-    });
-
-
-    Schema::create('categorization_rules', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
-        $table->string('keyword');
-        $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-        $table->decimal('confidence', 3, 2); // 0.00 to 1.00
-        $table->enum('rule_type', ['keyword', 'regex', 'amount_range', 'location', 'merchant']);
-        $table->json('rule_data')->nullable(); // additional rule parameters
-        $table->integer('usage_count')->default(0);
-        $table->integer('success_count')->default(0);
-        $table->boolean('is_active')->default(true);
-        $table->boolean('is_auto_generated')->default(true); // AI vs user created
-        $table->timestamps();
-        
-        $table->index(['tenant_id', 'is_active']);
-        $table->index(['keyword', 'tenant_id']);
-        $table->index(['tenant_id', 'confidence']);
-    });
-
     /**
      * Reverse the migrations.
      */
