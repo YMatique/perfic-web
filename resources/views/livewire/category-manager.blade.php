@@ -1,4 +1,4 @@
-<div>
+<div class="p-4 lg:p-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -100,8 +100,8 @@
 
     <!-- Modal Form -->
     @if($showForm)
-        <div class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700">
+        <div class="fixed inset-0 z-50 bg-black/30 dark:bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border-gray-200/50 dark:border-zinc-700/50">
                 <div class="mt-3">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-zinc-100 text-center mb-6">
                         {{ $editingCategory ? 'Editar Categoria' : 'Nova Categoria' }}
@@ -113,7 +113,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Nome</label>
                             <input type="text" 
                                    wire:model="name" 
-                                   class="w-full border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:border-primary-500 px-3 py-2" 
+                                   class="w-full border border-gray-200 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 px-3 py-2.5 transition-colors" 
                                    placeholder="Ex: Alimentação">
                             @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
@@ -122,17 +122,17 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Tipo</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center p-3 border rounded-lg cursor-pointer transition-colors
-                                             {{ $type === 'expense' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-700' }}">
-                                    <input type="radio" wire:model="type" value="expense" class="sr-only">
-                                    <span class="material-icons text-red-500 mr-2">remove_circle</span>
-                                    <span class="text-sm font-medium">Despesa</span>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-zinc-600 rounded-lg cursor-pointer transition-all hover:shadow-sm
+                                             {{ $type === 'expense' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-zinc-700' }}">
+                                    <input type="radio" wire:model.live="type" value="expense" class="sr-only">
+                                    <span class="material-icons text-red-500 mr-2 text-xl">remove_circle</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-zinc-300">Despesa</span>
                                 </label>
-                                <label class="flex items-center p-3 border rounded-lg cursor-pointer transition-colors
-                                             {{ $type === 'income' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-300 dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-700' }}">
-                                    <input type="radio" wire:model="type" value="income" class="sr-only">
-                                    <span class="material-icons text-green-500 mr-2">add_circle</span>
-                                    <span class="text-sm font-medium">Receita</span>
+                                <label class="flex items-center p-3 border border-gray-200 dark:border-zinc-600 rounded-lg cursor-pointer transition-all hover:shadow-sm
+                                             {{ $type === 'income' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-zinc-700' }}">
+                                    <input type="radio" wire:model.live="type" value="income" class="sr-only">
+                                    <span class="material-icons text-green-500 mr-2 text-xl">add_circle</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-zinc-300">Receita</span>
                                 </label>
                             </div>
                             @error('type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -141,12 +141,12 @@
                         <!-- Ícone -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Ícone</label>
-                            <div class="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto p-2 border rounded-lg border-gray-300 dark:border-zinc-600">
+                            <div class="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto p-3 border border-gray-200 dark:border-zinc-600 rounded-lg bg-gray-50 dark:bg-zinc-900">
                                 @foreach($availableIcons as $iconName => $iconLabel)
                                     <button type="button" 
                                             wire:click="$set('icon', '{{ $iconName }}')"
-                                            class="p-2 rounded-lg transition-colors
-                                                   {{ $icon === $iconName ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600' }}"
+                                            class="p-2.5 rounded-lg transition-all hover:scale-105
+                                                   {{ $icon === $iconName ? 'bg-primary-500 text-white shadow-md' : 'bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600' }}"
                                             title="{{ $iconLabel }}">
                                         <span class="material-icons text-lg">{{ $iconName }}</span>
                                     </button>
@@ -191,11 +191,11 @@
                         <div class="flex justify-end space-x-3 pt-4">
                             <button type="button" 
                                     wire:click="resetForm"
-                                    class="px-4 py-2 bg-gray-300 dark:bg-zinc-600 text-gray-700 dark:text-zinc-300 rounded-lg hover:bg-gray-400 dark:hover:bg-zinc-500 transition-colors">
+                                    class="px-5 py-2.5 bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-zinc-300 rounded-lg hover:bg-gray-300 dark:hover:bg-zinc-500 transition-colors font-medium">
                                 Cancelar
                             </button>
                             <button type="submit" 
-                                    class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+                                    class="px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2 font-medium shadow-md hover:shadow-lg">
                                 <span class="material-icons text-sm">save</span>
                                 <span>{{ $editingCategory ? 'Atualizar' : 'Salvar' }}</span>
                             </button>

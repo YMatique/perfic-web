@@ -38,61 +38,68 @@ public $pageTitle = 'Gestão de Categorias';
     public $filterType = 'all';
 
     // Available SVG icons (Lucide icons available in Flux)
+    // Available Material Icons
     public $availableIcons = [
         // Finanças
-        'wallet' => 'Carteira',
-        'credit-card' => 'Cartão',
-        'banknote' => 'Dinheiro',
-        'coins' => 'Moedas',
+        'account_balance_wallet' => 'Carteira',
+        'credit_card' => 'Cartão',
+        'payments' => 'Pagamentos',
+        'monetization_on' => 'Dinheiro',
+        'savings' => 'Poupança',
         
         // Compras & Alimentação
-        'shopping-cart' => 'Compras',
-        'shopping-bag' => 'Sacola',
-        'utensils' => 'Alimentação',
-        'coffee' => 'Café',
-        'wine' => 'Bebidas',
+        'shopping_cart' => 'Compras',
+        'shopping_bag' => 'Sacola',
+        'restaurant' => 'Restaurante',
+        'local_cafe' => 'Café',
+        'fastfood' => 'Fast Food',
+        'local_grocery_store' => 'Mercado',
         
         // Casa & Utilidades
         'home' => 'Casa',
-        'zap' => 'Energia',
-        'droplets' => 'Água',
+        'flash_on' => 'Energia',
+        'water_drop' => 'Água',
         'wifi' => 'Internet',
-        'smartphone' => 'Telefone',
+        'phone' => 'Telefone',
+        'build' => 'Manutenção',
         
         // Transporte
-        'car' => 'Carro',
-        'fuel' => 'Combustível',
-        'bus' => 'Transporte Público',
-        'plane' => 'Viagem',
-        'bike' => 'Bicicleta',
+        'directions_car' => 'Carro',
+        'local_gas_station' => 'Combustível',
+        'directions_bus' => 'Ônibus',
+        'flight' => 'Viagem',
+        'pedal_bike' => 'Bicicleta',
+        'local_taxi' => 'Taxi',
         
         // Saúde & Bem-estar
-        'heart' => 'Saúde',
-        'pill' => 'Medicamentos',
-        'dumbbell' => 'Academia',
-        'scissors' => 'Beleza',
+        'favorite' => 'Saúde',
+        'medical_services' => 'Médico',
+        'fitness_center' => 'Academia',
+        'spa' => 'Beleza',
+        'local_pharmacy' => 'Farmácia',
         
         // Entretenimento
-        'gamepad-2' => 'Jogos',
-        'film' => 'Cinema',
-        'music' => 'Música',
-        'camera' => 'Fotografia',
+        'sports_esports' => 'Jogos',
+        'movie' => 'Cinema',
+        'music_note' => 'Música',
+        'camera_alt' => 'Fotografia',
         'tv' => 'TV/Streaming',
+        'sports_soccer' => 'Esportes',
         
         // Educação & Trabalho
-        'book' => 'Educação',
-        'graduation-cap' => 'Curso',
-        'briefcase' => 'Trabalho',
+        'school' => 'Educação',
+        'work' => 'Trabalho',
         'laptop' => 'Tecnologia',
+        'book' => 'Livros',
         
         // Outros
-        'gift' => 'Presentes',
-        'baby' => 'Bebê',
-        'dog' => 'Pets',
-        'wrench' => 'Manutenção',
-        'shirt' => 'Roupas',
-        'palmtree' => 'Lazer'
+        'card_giftcard' => 'Presentes',
+        'pets' => 'Pets',
+        'checkroom' => 'Roupas',
+        'park' => 'Lazer',
+        'child_care' => 'Crianças'
     ];
+
 
     // Available colors
     public $availableColors = [
