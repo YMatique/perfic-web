@@ -100,6 +100,22 @@ class RecurringTransaction extends Model
             'yearly' => $base->addYear(),
             default => null,
         };
+        // If we have a due_day, adjust to that specific day
+        if ($this->due_day && $this->next_execution) {
+            if ($this->frequency === 'weekly') {
+                // For weekly, due_day is day of week (1=Monday, 7=Sunday)
+                $this->next_execution = $this->next_execution->startOfWeek()->addDays($this->due_day - 1);
+            } elseif (in_array($this->frequency, ['monthly', 'bimonthly', 'quarterly', 'yearly'])) {
+                // For monthly/quarterly/yearly, due_day is day of month (1-31)
+                $this->next_execution = $this->next_execution->day(min($this->due_day, $this->next_execution->daysInMonth));
+            }
+        }
+
+        // Make sure we don't go past end_date
+        if ($this->end_date && $this->next_execution->isAfter($this->end_date)) {
+            $this->next_execution = null;
+            $this->is_active = false;
+        }
     }
 
     public function execute()
@@ -115,7 +131,8 @@ class RecurringTransaction extends Model
             'is_recurring' => true,
         ]);
 
-        $this->last_execution = $this->next_execution;
+       
+        $this->last_execution = $this->next_execution ?? now();
         $this->calculateNextExecution();
         $this->save();
 

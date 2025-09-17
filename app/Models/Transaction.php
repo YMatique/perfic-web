@@ -55,11 +55,11 @@ class Transaction extends Model
     // Global Scopes
     protected static function booted()
     {
-        // static::addGlobalScope('tenant', function (Builder $builder) {
-        //     if (auth()->check()) {
-        //         $builder->where('tenant_id', auth()->id());
-        //     }
-        // });
+        static::addGlobalScope('tenant', function (Builder $builder) {
+            if (auth()->check()) {
+                $builder->where('tenant_id', auth()->id());
+            }
+        });
 
         // Log when transaction is created/updated
         static::created(function ($transaction) {

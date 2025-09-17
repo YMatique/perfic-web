@@ -91,6 +91,18 @@
                     Transações
                 </span>
             </a>
+            <!-- Transações Recorrentes -->
+            <a href="{{ route('recurring') }}" wire:navigate
+                class="@if (request()->routeIs('recurring')) bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border-r-2 border-primary-500 @else text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 @endif group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
+                <span class="material-icons flex-shrink-0"
+                    :class="{ 'mr-3': !sidebarCollapsed, 'mx-auto': sidebarCollapsed }">autorenew</span>
+                <span x-show="!sidebarCollapsed" x-transition:enter="transition ease-in-out duration-300 delay-75"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in-out duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0" class="truncate">
+                    Recorrentes
+                </span>
+            </a>
             <!-- Relatórios -->
             <a href="#"
                 class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
