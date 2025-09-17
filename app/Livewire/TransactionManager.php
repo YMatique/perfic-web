@@ -13,7 +13,7 @@ class TransactionManager extends Component
 {
     use WithToast, WithPagination;
 
-    public $title = 'Transações';
+ public $title = 'Transações';
     public $pageTitle = 'Gestão de Transações';
 
     // Form properties
@@ -36,40 +36,39 @@ class TransactionManager extends Component
     public $location = '';
 
     // Component state
+    public $transactions;
     public $categories;
     public $showForm = false;
     public $editingTransaction = null;
-
+    
     // Filters
-    public $filterType = 'all'; // all, income, expense
+    public $filterType = 'all';
     public $filterCategory = '';
     public $filterDateStart = '';
     public $filterDateEnd = '';
     public $search = '';
 
-    // Pagination
-    // protected $paginationView = 'livewire.custom-pagination';
-
     public function mount()
     {
         $this->loadCategories();
+        $this->loadTransactions();
         $this->transaction_date = now()->format('Y-m-d');
         $this->filterDateStart = now()->startOfMonth()->format('Y-m-d');
         $this->filterDateEnd = now()->endOfMonth()->format('Y-m-d');
     }
 
-    public function loadCategories()
+    public function loadTransactions()
     {
-        $this->categories = Category::active()
-            ->ordered()
-            ->get()
-            ->groupBy('type');
-    }
+        // $query = Transaction::query()
+        //     ->orderBy('transaction_date', 'desc')
+        //     ->orderBy('created_at', 'desc');
+         $query = Transaction::query()// Desabilita TODOS os global scopes
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('created_at', 'desc');
 
-    public function getTransactionsProperty()
-    {
-        $query = Transaction::with('category')
-            ->recent();
+             if (auth()->check()) {
+            $query->where('tenant_id', auth()->id());
+        }
 
         // Apply filters
         if ($this->filterType !== 'all') {
@@ -90,11 +89,19 @@ class TransactionManager extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('description', 'like', '%' . $this->search . '%')
-                    ->orWhere('location', 'like', '%' . $this->search . '%');
+                  ->orWhere('location', 'like', '%' . $this->search . '%');
             });
         }
 
-        return $query->paginate(15);
+        $this->transactions = $query->get();
+    }
+
+    public function loadCategories()
+    {
+        $this->categories = Category::active()
+            ->ordered()
+            ->get();
+            // ->groupBy('type');
     }
 
     public function openCreateForm()
@@ -133,6 +140,8 @@ class TransactionManager extends Component
 
             $this->toastSuccess('Transação criada!', 'A transação foi registrada com sucesso.');
             $this->resetForm();
+            $this->loadTransactions();
+            
         } catch (\Exception $e) {
             $this->toastError('Erro!', 'Erro ao criar transação: ' . $e->getMessage());
         }
@@ -154,6 +163,8 @@ class TransactionManager extends Component
 
             $this->toastSuccess('Transação atualizada!', 'A transação foi atualizada com sucesso.');
             $this->resetForm();
+            $this->loadTransactions();
+            
         } catch (\Exception $e) {
             $this->toastError('Erro!', 'Erro ao atualizar transação: ' . $e->getMessage());
         }
@@ -164,6 +175,8 @@ class TransactionManager extends Component
         try {
             $transaction->delete();
             $this->toastSuccess('Transação excluída!', 'A transação foi excluída com sucesso.');
+            $this->loadTransactions();
+            
         } catch (\Exception $e) {
             $this->toastError('Erro!', 'Erro ao excluir transação: ' . $e->getMessage());
         }
@@ -176,32 +189,33 @@ class TransactionManager extends Component
         $this->search = '';
         $this->filterDateStart = now()->startOfMonth()->format('Y-m-d');
         $this->filterDateEnd = now()->endOfMonth()->format('Y-m-d');
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
+    // Filter update methods
     public function updatedFilterType()
     {
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
     public function updatedFilterCategory()
     {
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
     public function updatedSearch()
     {
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
     public function updatedFilterDateStart()
     {
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
     public function updatedFilterDateEnd()
     {
-        $this->resetPage();
+        $this->loadTransactions();
     }
 
     public function resetForm()
@@ -217,41 +231,51 @@ class TransactionManager extends Component
         $this->resetValidation();
     }
 
-    // Quick stats for dashboard
-    public function getStatsProperty()
-    {
-        $dateRange = [
-            $this->filterDateStart ?: now()->startOfMonth(),
-            $this->filterDateEnd ?: now()->endOfMonth()
-        ];
+   public function loadStats()
+{
+    $dateRange = [
+        $this->filterDateStart ?: now()->startOfMonth(),
+        $this->filterDateEnd ?: now()->endOfMonth()
+    ];
 
-        $totalIncome = Transaction::where('type', 'income')
-            ->whereBetween('transaction_date', $dateRange)
-            ->sum('amount');
+    $baseQuery = Transaction::query()
+        ->whereBetween('transaction_date', $dateRange);
 
-        $totalExpenses = Transaction::where('type', 'expense')
-            ->whereBetween('transaction_date', $dateRange)
-            ->sum('amount');
-
-        $balance = $totalIncome - $totalExpenses;
-
-        $transactionCount = Transaction::whereBetween('transaction_date', $dateRange)
-            ->count();
-
-        return [
-            'totalIncome' => $totalIncome,
-            'totalExpenses' => $totalExpenses,
-            'balance' => $balance,
-            'transactionCount' => $transactionCount,
-        ];
+    if (auth()->check()) {
+        $baseQuery->where('tenant_id', auth()->id());
     }
 
+    $totalIncome = (clone $baseQuery)->where('type', 'income')->sum('amount');
+    $totalExpenses = (clone $baseQuery)->where('type', 'expense')->sum('amount');
+    $balance = $totalIncome - $totalExpenses;
+    $transactionCount = (clone $baseQuery)->count();
+
+    return [
+        'totalIncome' => $totalIncome,
+        'totalExpenses' => $totalExpenses,
+        'balance' => $balance,
+        'transactionCount' => $transactionCount,
+    ];
+}
     public function render()
     {
-        // dd($this->getTransactionsProperty());
+
+         // Teste básico - sem stats por enquanto
+    // try {
+    //     $testQuery = Transaction::query()->limit(1)->get();
+    //     dd("Funcionou!", $testQuery);
+    // } catch (\Exception $e) {
+    //     dd("Erro:", $e->getMessage(), $e->getTraceAsString());
+    // }
+    // Teste só as stats
+    // try {
+    //     $stats = $this->getStatsProperty();
+    //     dd("Stats funcionaram!", $stats);
+    // } catch (\Exception $e) {
+    //     dd("Erro nas stats:", $e->getMessage(), $e->getTraceAsString());
+    // }
         return view('livewire.transaction-manager',  [
-            'transactions' => $this->getTransactionsProperty(),
-            'stats' => $this->getStatsProperty()
+            //  'stats' => $this->loadStats() 
         ])->layout('components.layouts.perfic-layout', [
             'title' => $this->title,
             'pageTitle' => $this->pageTitle

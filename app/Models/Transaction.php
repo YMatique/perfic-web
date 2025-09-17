@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 class Transaction extends Model
 {
@@ -54,15 +55,15 @@ class Transaction extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
-            if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
-            }
-        });
+        // static::addGlobalScope('tenant', function (Builder $builder) {
+        //     if (auth()->check()) {
+        //         $builder->where('tenant_id', auth()->id());
+        //     }
+        // });
 
         // Log when transaction is created/updated
         static::created(function ($transaction) {
-            \Log::info('Transaction created', [
+            Log::info('Transaction created', [
                 'tenant_id' => $transaction->tenant_id,
                 'id' => $transaction->id,
                 'amount' => $transaction->amount,
