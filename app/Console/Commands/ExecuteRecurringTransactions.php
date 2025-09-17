@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\RecurringTransaction;
 use Illuminate\Console\Command;
 
 class ExecuteRecurringTransactions extends Command
