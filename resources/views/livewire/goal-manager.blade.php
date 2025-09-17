@@ -1,4 +1,4 @@
-<div class="p-4 lg:p-6">
+<div>
     <!-- Header -->
     <header class="p-4 lg:p-6 border-b border-gray-200 dark:border-zinc-700">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -190,12 +190,12 @@
                                 </h3>
                                 <div class="flex items-center space-x-2">
                                     <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
-                                        {{ $getGoalStatusColor($goal) === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : '' }}
-                                        {{ $getGoalStatusColor($goal) === 'yellow' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}
-                                        {{ $getGoalStatusColor($goal) === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : '' }}
-                                        {{ $getGoalStatusColor($goal) === 'gray' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' : '' }}">
-                                        <span class="material-icons text-xs mr-1">{{ $getGoalStatusIcon($goal) }}</span>
-                                        {{ $getGoalStatusText($goal) }}
+                                        {{ $goal->status_color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : '' }}
+                                        {{ $goal->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}
+                                        {{ $goal->status_color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : '' }}
+                                        {{ $goal->status_color === 'gray' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' : '' }}">
+                                        <span class="material-icons text-xs mr-1">{{ $goal->status_icon }}</span>
+                                        {{ $goal->status_text }}
                                     </span>
                                     <span class="text-xs text-gray-500 dark:text-zinc-400">
                                         {{ $goalTypes[$goal->type] }}
@@ -248,10 +248,10 @@
                             </div>
                             <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-3">
                                 <div class="h-3 rounded-full transition-all duration-300
-                                    {{ $getGoalStatusColor($goal) === 'green' ? 'bg-green-500' : '' }}
-                                    {{ $getGoalStatusColor($goal) === 'yellow' ? 'bg-yellow-500' : '' }}
-                                    {{ $getGoalStatusColor($goal) === 'blue' ? 'bg-blue-500' : '' }}
-                                    {{ $getGoalStatusColor($goal) === 'gray' ? 'bg-gray-500' : '' }}"
+                                    {{ $goal->status_color === 'green' ? 'bg-green-500' : '' }}
+                                    {{ $goal->status_color === 'yellow' ? 'bg-yellow-500' : '' }}
+                                    {{ $goal->status_color === 'blue' ? 'bg-blue-500' : '' }}
+                                    {{ $goal->status_color === 'gray' ? 'bg-gray-500' : '' }}"
                                     style="width: {{ min(100, $goal->progress_percentage) }}%">
                                 </div>
                             </div>

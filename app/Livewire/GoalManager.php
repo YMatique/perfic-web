@@ -11,9 +11,10 @@ use Livewire\WithPagination;
 
 class GoalManager extends Component
 {
-    use WithToast, WithPagination;
+    use WithPagination, WithToast;
 
     public $title = 'Metas Financeiras';
+
     public $pageTitle = 'Gestão de Metas';
 
     // Form properties
@@ -43,21 +44,26 @@ class GoalManager extends Component
 
     // Component state
     public $goals;
+
     public $categories;
+
     public $showForm = false;
+
     public $editingGoal = null;
-    
+
     // Filters
     public $filterType = 'all';
+
     public $filterStatus = 'all';
+
     public $filterPeriod = 'all';
 
     // Goal types for display
     public $goalTypes = [
         'spending_limit' => 'Limite de Gastos',
-        'savings_target' => 'Meta de Poupança', 
+        'savings_target' => 'Meta de Poupança',
         'category_limit' => 'Limite por Categoria',
-        'income_target' => 'Meta de Receita'
+        'income_target' => 'Meta de Receita',
     ];
 
     public $periods = [
@@ -65,7 +71,7 @@ class GoalManager extends Component
         'weekly' => 'Semanal',
         'monthly' => 'Mensal',
         'quarterly' => 'Trimestral',
-        'yearly' => 'Anual'
+        'yearly' => 'Anual',
     ];
 
     public function mount()
@@ -98,11 +104,11 @@ class GoalManager extends Component
                 $query->where('is_active', false);
             } elseif ($this->filterStatus === 'completed') {
                 $query->where('is_active', true)
-                     ->whereRaw('current_progress >= target_amount');
+                    ->whereRaw('current_progress >= target_amount');
             } elseif ($this->filterStatus === 'warning') {
                 $query->where('is_active', true)
-                     ->whereRaw('(current_progress / target_amount) >= 0.8')
-                     ->whereRaw('current_progress < target_amount');
+                    ->whereRaw('(current_progress / target_amount) >= 0.8')
+                    ->whereRaw('current_progress < target_amount');
             }
         }
 
@@ -111,7 +117,7 @@ class GoalManager extends Component
         }
 
         $this->goals = $query->get();
-        
+
         // Calculate progress for each goal
         foreach ($this->goals as $goal) {
             $goal->calculateProgress();
@@ -171,10 +177,10 @@ class GoalManager extends Component
 
         if ($this->editingGoal) {
             $this->editingGoal->update($data);
-            $this->toastSuccess('Sucesso','Meta atualizada com sucesso!');
+            $this->success('Meta atualizada com sucesso!');
         } else {
             Goal::create($data);
-            $this->toastSuccess('Sucesso','Meta criada com sucesso!');
+            $this->success('Meta criada com sucesso!');
         }
 
         $this->cancelForm();
@@ -184,22 +190,22 @@ class GoalManager extends Component
     public function delete(Goal $goal)
     {
         $goal->delete();
-        $this->toastSuccess('Sucesso','Meta excluída com sucesso!');
+        $this->success('Meta excluída com sucesso!');
         $this->loadGoals();
     }
 
     public function toggleStatus(Goal $goal)
     {
-        $goal->update(['is_active' => !$goal->is_active]);
+        $goal->update(['is_active' => ! $goal->is_active]);
         $status = $goal->is_active ? 'ativada' : 'desativada';
-        $this->toastSuccess('Sucesso',"Meta {$status} com sucesso!");
+        $this->success("Meta {$status} com sucesso!");
         $this->loadGoals();
     }
 
     public function calculateProgress(Goal $goal)
     {
         $goal->calculateProgress();
-        $this->toastSuccess('Sucesso','Progresso recalculado!');
+        $this->success('Progresso recalculado!');
         $this->loadGoals();
     }
 
@@ -213,8 +219,8 @@ class GoalManager extends Component
     public function resetForm()
     {
         $this->reset([
-            'name', 'type', 'category_id', 'target_amount', 
-            'period', 'start_date', 'end_date', 'is_active'
+            'name', 'type', 'category_id', 'target_amount',
+            'period', 'start_date', 'end_date', 'is_active',
         ]);
         $this->start_date = now()->startOfMonth()->format('Y-m-d');
         $this->end_date = now()->endOfMonth()->format('Y-m-d');
@@ -225,13 +231,15 @@ class GoalManager extends Component
 
     public function getGoalStatusColor($goal)
     {
-        if (!$goal->is_active) return 'gray';
-        
+        if (! $goal->is_active) {
+            return 'gray';
+        }
+
         $percentage = $goal->progress_percentage;
-        
+
         return match (true) {
             $percentage >= 100 => 'green',
-            $percentage >= 80 => 'yellow', 
+            $percentage >= 80 => 'yellow',
             $percentage >= 50 => 'blue',
             default => 'gray'
         };
@@ -239,10 +247,12 @@ class GoalManager extends Component
 
     public function getGoalStatusIcon($goal)
     {
-        if (!$goal->is_active) return 'pause_circle';
-        
+        if (! $goal->is_active) {
+            return 'pause_circle';
+        }
+
         $percentage = $goal->progress_percentage;
-        
+
         return match (true) {
             $percentage >= 100 => 'check_circle',
             $percentage >= 80 => 'warning',
@@ -253,10 +263,12 @@ class GoalManager extends Component
 
     public function getGoalStatusText($goal)
     {
-        if (!$goal->is_active) return 'Inativa';
-        
+        if (! $goal->is_active) {
+            return 'Inativa';
+        }
+
         $percentage = $goal->progress_percentage;
-        
+
         return match (true) {
             $percentage >= 100 => 'Concluída',
             $percentage >= 80 => 'Atenção',
@@ -265,12 +277,20 @@ class GoalManager extends Component
         };
     }
 
-
     public function render()
     {
+        // Process goals to add status properties
+        if ($this->goals) {
+            foreach ($this->goals as $goal) {
+                $goal->status_color = $this->getGoalStatusColor($goal);
+                $goal->status_icon = $this->getGoalStatusIcon($goal);
+                $goal->status_text = $this->getGoalStatusText($goal);
+            }
+        }
+
         return view('livewire.goal-manager')->layout('components.layouts.perfic-layout', [
             'title' => $this->title,
-            'pageTitle' => $this->pageTitle
+            'pageTitle' => $this->pageTitle,
         ]);
     }
 }
