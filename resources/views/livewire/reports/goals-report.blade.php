@@ -199,6 +199,12 @@
 {{-- Script para gráfico de metas --}}
 @push('scripts')
 <script>
+    function formatMZN(value) {
+    return 'MZN ' + new Intl.NumberFormat('pt-MZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
 document.addEventListener('DOMContentLoaded', function() {
     @if(!empty($reportData['goals']) && count($reportData['goals']) > 0)
         const goalsData = @json($reportData['goals']);

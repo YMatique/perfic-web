@@ -75,7 +75,14 @@
 {{-- Scripts para gráficos das categorias --}}
 @section('scripts')
 <script>
+    function formatMZN(value) {
+    return 'MZN ' + new Intl.NumberFormat('pt-MZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
 document.addEventListener('DOMContentLoaded', function() {
+
     const categoriesData = @json($reportData);
     
     categoriesData.forEach(function(category) {

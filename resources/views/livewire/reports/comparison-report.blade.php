@@ -175,6 +175,12 @@
 {{-- Script para o gráfico de comparação --}}
 @section('scripts')
 <script>
+    function formatMZN(value) {
+    return 'MZN ' + new Intl.NumberFormat('pt-MZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('comparisonChart');
     if (ctx) {
