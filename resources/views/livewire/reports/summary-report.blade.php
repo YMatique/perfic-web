@@ -212,7 +212,7 @@
 @endif
 
 {{-- Script para o gráfico --}}
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Dados do gráfico de evolução mensal
@@ -280,4 +280,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+@endsection

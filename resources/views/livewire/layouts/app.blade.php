@@ -374,6 +374,8 @@
     </div>
 
     @fluxScripts
+    @livewireScripts
+    @yield('scripts')
 
     <script>
         function appLayout() {

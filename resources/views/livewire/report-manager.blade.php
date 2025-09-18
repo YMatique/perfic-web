@@ -162,7 +162,7 @@
 </div>
 
 {{-- Estilos customizados para gráficos --}}
-@push('scripts')
+@section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -190,4 +190,4 @@ function getThemeColors() {
     };
 }
 </script>
-@endpush
+@endsection

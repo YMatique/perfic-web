@@ -173,7 +173,7 @@
 </div>
 
 {{-- Script para o gráfico de comparação --}}
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('comparisonChart');
@@ -230,4 +230,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+@endsection

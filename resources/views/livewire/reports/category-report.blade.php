@@ -73,7 +73,7 @@
 </div>
 
 {{-- Scripts para gráficos das categorias --}}
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoriesData = @json($reportData);
@@ -117,4 +117,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endpush
+@endsection
