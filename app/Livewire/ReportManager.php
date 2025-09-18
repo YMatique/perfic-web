@@ -113,7 +113,7 @@ class ReportManager extends Component
             $tenant = Tenant::where('id',Auth::user()->id)->first();
             $startDate = Carbon::parse($this->startDate)->startOfDay();
             $endDate = Carbon::parse($this->endDate)->endOfDay();
-            dd(Auth::user(), Tenant::where('id',Auth::user()->id)->first());
+            // dd(Auth::user(), Tenant::where('id',Auth::user()->id)->first());
             switch ($this->reportType) {
                 case 'summary':
                     $this->reportData = $this->generateSummaryReport($tenant, $startDate, $endDate);
