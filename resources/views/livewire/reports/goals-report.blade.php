@@ -197,7 +197,7 @@
 @endif
 
 {{-- Script para gráfico de metas --}}
-@push('scripts')
+@section('scripts')
 <script>
     function formatMZN(value) {
     return 'MZN ' + new Intl.NumberFormat('pt-MZ', {
@@ -273,4 +273,4 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 });
 </script>
-@endpush
+@endsection
