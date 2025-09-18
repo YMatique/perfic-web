@@ -3,6 +3,7 @@
 use App\Livewire\CategoryManager;
 use App\Livewire\GoalManager;
 use App\Livewire\RecurringTransactionManager;
+use App\Livewire\ReportManager;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -27,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('transactions', TransactionManager::class)->name('transactions');
     Route::get('goals', GoalManager::class)->name('goals');
     Route::get('recurring', RecurringTransactionManager::class)->name('recurring');
+    Route::get('reports', ReportManager::class)->name('reports');
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');

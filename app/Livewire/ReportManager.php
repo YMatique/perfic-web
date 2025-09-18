@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Tenant;
 use App\Traits\WithToast;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -108,10 +109,11 @@ class ReportManager extends Component
         try {
             $this->validate();
             
-            $tenant = Auth::user();
+
+            $tenant = Tenant::where('id',Auth::user()->id)->first();
             $startDate = Carbon::parse($this->startDate)->startOfDay();
             $endDate = Carbon::parse($this->endDate)->endOfDay();
-
+            dd(Auth::user(), Tenant::where('id',Auth::user()->id)->first());
             switch ($this->reportType) {
                 case 'summary':
                     $this->reportData = $this->generateSummaryReport($tenant, $startDate, $endDate);
@@ -370,7 +372,7 @@ class ReportManager extends Component
     }
     public function render()
     {
-         $categories = Auth::user()->categories()->orderBy('name')->get();
+        $categories = Auth::user()->categories()->orderBy('name')->get();
         return view('livewire.report-manager', [
             'categories' => $categories
         ])->layout('components.layouts.perfic-layout', [
