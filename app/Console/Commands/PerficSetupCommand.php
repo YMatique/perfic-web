@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Tenant;
 use Illuminate\Console\Command;
 
 class PerficSetupCommand extends Command
@@ -55,7 +56,7 @@ class PerficSetupCommand extends Command
     {
         $this->info('');
         $this->info('  ╔═══════════════════════════════════╗');
-        $this->info('  ║         🚀 PERFIC SETUP          ║');
+        $this->info('  ║            PERFIC SETUP           ║');
         $this->info('  ║   Sistema de Controle Financeiro  ║');
         $this->info('  ╚═══════════════════════════════════╝');
         $this->info('');
@@ -65,20 +66,51 @@ class PerficSetupCommand extends Command
     {
         $this->info('🏷️ Instalando categorias padrão...');
 
-        $options = $tenantId ? ['--tenant' => $tenantId] : [];
-        $this->call('db:seed', [
-            '--class' => 'DefaultCategoriesSeeder',
-        ] + $options);
+        // $options = $tenantId ? ['--tenant' => $tenantId] : [];
+        // $this->call('db:seed', [
+        //     '--class' => 'DefaultCategoriesSeeder',
+        // ] + $options);
+        // Verificar se temos usuários
+        if (! $tenantId) {
+            $usersCount = Tenant::count();
+            if ($usersCount === 0) {
+                $this->warn('⚠️ Nenhum usuário encontrado!');
+                if ($this->confirm('Criar usuário demo para teste?', true)) {
+                    $this->createDemoUser();
+                }
+            }
+        }
+
+        // Chamar o seeder corretamente - usando a classe diretamente
+        $seeder = new \Database\Seeders\DefaultCategoriesSeeder;
+        $seeder->setCommand($this);
+        $seeder->setContainer(app());
+
+        if ($tenantId) {
+            // Se especificou tenant, passar via environment/config temporário
+            config(['seeder.tenant_id' => $tenantId]);
+        }
+
+        $seeder->run();
     }
 
     private function runDemoData($tenantId = null)
     {
         $this->info('📊 Instalando dados de demonstração...');
 
-        $options = $tenantId ? ['--tenant' => $tenantId] : [];
-        $this->call('db:seed', [
-            '--class' => 'DemoDataSeeder',
-        ] + $options);
+        // $options = $tenantId ? ['--tenant' => $tenantId] : [];
+        // $this->call('db:seed', [
+        //     '--class' => 'DemoDataSeeder',
+        // ] + $options);
+        $seeder = new \Database\Seeders\DemoDataSeeder;
+        $seeder->setCommand($this);
+        $seeder->setContainer(app());
+
+        if ($tenantId) {
+            config(['seeder.tenant_id' => $tenantId]);
+        }
+
+        $seeder->run();
     }
 
     private function runFullSetup($tenantId = null, $force = false)
@@ -98,6 +130,25 @@ class PerficSetupCommand extends Command
 
         // Then demo data
         $this->runDemoData($tenantId);
+    }
+
+     private function createDemoUser()
+    {
+        $this->info('👤 Criando usuário demo...');
+        
+        $demoUser = Tenant::create([
+            'name' => 'Usuário Demo',
+            'email' => 'demo@perfic.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
+
+        $this->info("✅ Usuário demo criado:");
+        $this->info("   📧 Email: demo@perfic.com");
+        $this->info("   🔑 Senha: password");
+        $this->newLine();
+        
+        return $demoUser;
     }
 
     private function showFooter()

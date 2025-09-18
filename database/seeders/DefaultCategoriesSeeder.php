@@ -16,6 +16,23 @@ class DefaultCategoriesSeeder extends Seeder
     {
         $this->command->info('🏷️ Criando categorias padrão...');
 
+          // Determinar para qual(is) tenant(s) criar as categorias
+        $tenantId = config('seeder.tenant_id');
+        
+        if ($tenantId) {
+            $tenants = Tenant::where('id', $tenantId)->get();
+            if ($tenants->isEmpty()) {
+                $this->command->error("❌ Tenant com ID {$tenantId} não encontrado!");
+                return;
+            }
+        } else {
+            $tenants = Tenant::all();
+            if ($tenants->isEmpty()) {
+                $this->command->warn('⚠️ Nenhum usuário encontrado! Registre-se primeiro.');
+                return;
+            }
+        }
+
         // Categorias padrão que todo usuário deve ter
         $defaultCategories = [
             // RECEITAS
@@ -182,38 +199,42 @@ class DefaultCategoriesSeeder extends Seeder
         ];
 
         // Se não especificar tenant, criar para todos os usuários existentes
-        if ($tenantId = $this->command->option('tenant')) {
-            $tenants = Tenant::where('id', $tenantId)->get();
-            $this->command->info("👤 Criando categorias para tenant ID: {$tenantId}");
-        } else {
-            $tenants = Tenant::all();
-            $this->command->info("👥 Criando categorias para todos os usuários ({$tenants->count()})");
-        }
+        // if ($tenantId = $this->command->option('tenant')) {
+        //     $tenants = Tenant::where('id', $tenantId)->get();
+        //     $this->command->info("👤 Criando categorias para tenant ID: {$tenantId}");
+        // } else {
+        //     $tenants = Tenant::all();
+        //     $this->command->info("👥 Criando categorias para todos os usuários ({$tenants->count()})");
+        // }
 
-        $totalCreated = 0;
-
+ $totalCreated = 0;
         foreach ($tenants as $tenant) {
-            $this->command->info("  📁 Processando usuário: {$tenant->name} ({$tenant->email})");
-            
+            $created = 0;
             foreach ($defaultCategories as $categoryData) {
-                // Verificar se categoria já existe para este tenant
-                $existingCategory = Category::where('tenant_id', $tenant->id)
-                    ->where('name', $categoryData['name'])
-                    ->where('type', $categoryData['type'])
-                    ->first();
+                $category = Category::firstOrCreate([
+                    'tenant_id' => $tenant->id,
+                    'name' => $categoryData['name'],
+                    'type' => $categoryData['type'],
+                ], [
+                    'color' => $categoryData['color'],
+                    'icon' => $categoryData['icon'],
+                    'order' => $categoryData['order'],
+                    'is_default' => $categoryData['is_default'],
+                    'is_active' => true,
+                ]);
 
-                if (!$existingCategory) {
-                    Category::create(array_merge($categoryData, [
-                        'tenant_id' => $tenant->id,
-                        'is_active' => true,
-                    ]));
-                    $totalCreated++;
-                } else {
-                    $this->command->warn("    ⚠️ Categoria '{$categoryData['name']}' já existe - pulando");
+                if ($category->wasRecentlyCreated) {
+                    $created++;
                 }
             }
+
+            $this->command->info("  ✅ {$created} categorias criadas para {$tenant->name}");
+            $totalCreated += $created;
         }
 
-        $this->command->info("✅ {$totalCreated} categorias criadas com sucesso!");
+        $this->command->info("🎉 Total: {$totalCreated} categorias criadas para {$tenants->count()} usuário(s)");
+        
+        // Limpar config temporária
+        // config()->forget('seeder.tenant_id');
     }
 }
