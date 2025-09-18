@@ -95,7 +95,7 @@
     <div
         class="lg:col-span-2 bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6">
         <h3 class="text-sm font-medium text-gray-900 dark:text-zinc-100 mb-4">Evolução Mensal</h3>
-        <div style="height: 300px; position: relative;">
+        <div style="height: 300px; position: relative;" wire:ignore >
             <canvas id="monthlyEvolutionChart" width="400" height="200" style="position: relative"></canvas>
         </div>
     </div>

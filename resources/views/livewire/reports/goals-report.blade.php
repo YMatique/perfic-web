@@ -179,7 +179,7 @@
     </div>
 
     {{-- Gráfico de Progresso das Metas --}}
-    <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6 mt-8">
+    <div wire:ignore  class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-6 mt-8">
         <h3 class="text-sm font-medium text-gray-900 dark:text-zinc-100 mb-6">Progresso de Todas as Metas</h3>
         <canvas id="goalsProgressChart" width="400" height="300"></canvas>
     </div>

@@ -29,7 +29,7 @@
                 {{-- Grid com Gráfico e Transações Recentes --}}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Gráfico de Evolução Mensal --}}
-                    <div>
+                    <div class="" wire:ignore >
                         <h4 class="text-sm font-medium text-gray-900 dark:text-zinc-100 mb-4">Evolução Mensal</h4>
                         <canvas id="categoryChart_{{ $category['id'] }}" width="400" height="200"></canvas>
                     </div>
