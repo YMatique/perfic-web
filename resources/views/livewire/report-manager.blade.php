@@ -1,4 +1,4 @@
-<div>
+<div class="p-4 lg:p-6">
     {{-- Header com filtros --}}
     <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 p-4 lg:p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">

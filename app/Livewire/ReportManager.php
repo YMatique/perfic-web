@@ -130,13 +130,14 @@ class ReportManager extends Component
             }
 
         } catch (\Exception $e) {
-            $this->error('Erro ao gerar relatório: ' . $e->getMessage());
+            dd($e);
+            $this->toastError('Erro ao gerar relatório: ' . $e->getMessage());
         }
 
         $this->loading = false;
     }
 
-    private function generateSummaryReport($tenant, $startDate, $endDate)
+     private function generateSummaryReport($tenant, $startDate, $endDate)
     {
         $query = $tenant->transactions()
             ->whereBetween('transaction_date', [$startDate, $endDate]);
@@ -157,7 +158,7 @@ class ReportManager extends Component
             $categoryBreakdown[$type] = $transactions
                 ->where('type', $type)
                 ->groupBy('category_id')
-                ->map(function ($items, $categoryId) use ($tenant) {
+                ->map(function ($items, $categoryId) use ($tenant, $type, $totalIncome, $totalExpenses) {
                     $category = $tenant->categories()->find($categoryId);
                     return [
                         'category_name' => $category ? $category->name : 'Sem Categoria',
@@ -229,6 +230,7 @@ class ReportManager extends Component
             'top_transactions' => $topTransactions
         ];
     }
+
 
     private function generateCategoryReport($tenant, $startDate, $endDate)
     {
@@ -368,11 +370,15 @@ class ReportManager extends Component
     public function exportReport($format = 'pdf')
     {
         // Implementação futura para exportação
-        $this->info("Exportação em {$format} será implementada em breve!");
+        $this->toast("Informação","Exportação em {$format} será implementada em breve!");
     }
     public function render()
     {
-        $categories = Auth::user()->categories()->orderBy('name')->get();
+        // $tenant = Tenant::find(auth()->id());
+        // $categories = Auth::user()->categories()->orderBy('name')->get();        $categories = Auth::user()->categories()->orderBy('name')->get();
+
+           $tenant = Tenant::where('id', auth()->id())->first();
+        $categories = $tenant ? $tenant->categories()->orderBy('name')->get() : collect();
         return view('livewire.report-manager', [
             'categories' => $categories
         ])->layout('components.layouts.perfic-layout', [
