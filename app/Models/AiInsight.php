@@ -23,6 +23,10 @@ class AiInsight extends Model
         'is_actionable',
         'action_data',
         'expires_at',
+        'description',
+        'impact_level',
+        'data',
+        'category_id'
     ];
 
     protected $casts = [
@@ -31,6 +35,7 @@ class AiInsight extends Model
         'is_actionable' => 'boolean',
         'action_data' => 'array',
         'expires_at' => 'datetime',
+         'data' => 'array',  
     ];
 
     // Relationships
@@ -87,6 +92,17 @@ class AiInsight extends Model
     {
         return $query->where('is_actionable', true);
     }
+
+       public function scopeByImpactLevel($query, $level)
+    {
+        return $query->where('impact_level', $level);
+    }
+
+    public function scopeHighImpact($query)
+    {
+        return $query->where('impact_level', 'high');
+    }
+
 
     // Helper methods
     public static function generateInsights(Tenant $tenant)
@@ -327,4 +343,24 @@ class AiInsight extends Model
             default => '📝',
         };
     }
+    public function getImpactColorAttribute()
+    {
+        return match($this->impact_level) {
+            'high' => '#DC2626',   // red-600
+            'medium' => '#D97706', // amber-600
+            'low' => '#059669',    // emerald-600
+            default => '#6B7280',  // gray-500
+        };
+    }
+
+    public function getImpactIconAttribute()
+    {
+        return match($this->impact_level) {
+            'high' => 'error',
+            'medium' => 'warning',
+            'low' => 'info',
+            default => 'help',
+        };
+    }
+    
 }
