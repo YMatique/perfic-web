@@ -104,7 +104,7 @@
                 </span>
             </a>
             <!-- Relatórios -->
-            <a href="#"
+            <a href="{{ route('reports') }}" wire:navigate
                 class="text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-700 hover:text-gray-900 dark:hover:text-zinc-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors">
                 <span class="material-icons flex-shrink-0"
                     :class="{ 'mr-3': !sidebarCollapsed, 'mx-auto': sidebarCollapsed }">pie_chart</span>
