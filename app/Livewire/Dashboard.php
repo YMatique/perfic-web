@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Tenant;
+use App\Models\Transaction;
 use App\Models\User;
 use Livewire\Component;
 
@@ -56,24 +57,25 @@ class Dashboard extends Component
 
     private function getSummaryData($user)
     {
-        $currentMonth = now()->startOfMonth();
-        $lastMonth = now()->subMonth()->startOfMonth();
+        $now = now();
 
-        // Dados do mês atual
-        $currentMonthTransactions = $user
-            ->transactions()
-            ->whereBetween('transaction_date', [$currentMonth, now()])
-            ->get();
+        $currentMonthStart = $now->copy()->startOfMonth();
+        $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
+        $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
+
+        $currentMonthTransactions = Transaction::whereBetween(
+            'transaction_date',
+            [$currentMonthStart, $now]
+        )->get();
 
         $currentIncome = $currentMonthTransactions->where('type', 'income')->sum('amount');
         $currentExpenses = $currentMonthTransactions->where('type', 'expense')->sum('amount');
         $currentBalance = $currentIncome - $currentExpenses;
 
-        // Dados do mês passado para comparação
-        $lastMonthTransactions = $user
-            ->transactions()
-            ->whereBetween('transaction_date', [$lastMonth, $lastMonth->copy()->endOfMonth()])
-            ->get();
+        $lastMonthTransactions = Transaction::whereBetween(
+            'transaction_date',
+            [$lastMonthStart, $lastMonthEnd]
+        )->get();
 
         $lastIncome = $lastMonthTransactions->where('type', 'income')->sum('amount');
         $lastExpenses = $lastMonthTransactions->where('type', 'expense')->sum('amount');
@@ -85,6 +87,7 @@ class Dashboard extends Component
         // Taxa de poupança
         $savingsRate = $currentIncome > 0 ? (($currentBalance / $currentIncome) * 100) : 0;
 
+        // dd($currentIncome, $currentExpenses, $currentBalance, $incomeChange, $expenseChange, $savingsRate);
         return [
             'current_income' => $currentIncome,
             'current_expenses' => $currentExpenses,
