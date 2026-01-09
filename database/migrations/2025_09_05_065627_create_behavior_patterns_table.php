@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('behavior_patterns', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            // $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('pattern_type', ['spending', 'income', 'category', 'temporal', 'location']);
             $table->string('pattern_key'); // "weekend_spending", "monthly_income", etc.
             $table->decimal('average_value', 10, 2);
@@ -23,8 +24,8 @@ return new class extends Migration
             $table->timestamp('calculated_at');
             $table->timestamps();
 
-            $table->index(['tenant_id', 'pattern_type']);
-            $table->index(['tenant_id', 'confidence']);
+            $table->index(['user_id', 'pattern_type']);
+            $table->index(['user_id', 'confidence']);
         });
     }
 

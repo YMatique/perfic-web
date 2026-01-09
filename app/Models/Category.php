@@ -11,7 +11,7 @@ class Category extends Model
      use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'name',
         'type',
         'color',
@@ -28,9 +28,9 @@ class Category extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function transactions()
@@ -56,9 +56,9 @@ class Category extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }

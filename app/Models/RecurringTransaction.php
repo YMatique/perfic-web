@@ -11,7 +11,7 @@ class RecurringTransaction extends Model
      use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'category_id',
         'type',
         'amount',
@@ -36,9 +36,9 @@ class RecurringTransaction extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function category()
@@ -54,9 +54,9 @@ class RecurringTransaction extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
 
@@ -121,7 +121,7 @@ class RecurringTransaction extends Model
     public function execute()
     {
         $transaction = Transaction::create([
-            'tenant_id' => $this->tenant_id,
+            'user_id' => $this->user_id,
             'category_id' => $this->category_id,
             'recurring_transaction_id' => $this->id,
             'type' => $this->type,

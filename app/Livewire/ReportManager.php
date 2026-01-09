@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Tenant;
+use App\Models\User;
 use App\Traits\WithToast;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -110,22 +111,22 @@ class ReportManager extends Component
             $this->validate();
             
 
-            $tenant = Tenant::where('id',Auth::user()->id)->first();
+            $user = User::where('id',Auth::user()->id)->first();
             $startDate = Carbon::parse($this->startDate)->startOfDay();
             $endDate = Carbon::parse($this->endDate)->endOfDay();
             // dd(Auth::user(), Tenant::where('id',Auth::user()->id)->first());
             switch ($this->reportType) {
                 case 'summary':
-                    $this->reportData = $this->generateSummaryReport($tenant, $startDate, $endDate);
+                    $this->reportData = $this->generateSummaryReport($user, $startDate, $endDate);
                     break;
                 case 'category':
-                    $this->reportData = $this->generateCategoryReport($tenant, $startDate, $endDate);
+                    $this->reportData = $this->generateCategoryReport($user, $startDate, $endDate);
                     break;
                 case 'goals':
-                    $this->reportData = $this->generateGoalsReport($tenant, $startDate, $endDate);
+                    $this->reportData = $this->generateGoalsReport($user, $startDate, $endDate);
                     break;
                 case 'comparison':
-                    $this->reportData = $this->generateComparisonReport($tenant, $startDate, $endDate);
+                    $this->reportData = $this->generateComparisonReport($user, $startDate, $endDate);
                     break;
             }
 
@@ -137,9 +138,9 @@ class ReportManager extends Component
         $this->loading = false;
     }
 
-     private function generateSummaryReport($tenant, $startDate, $endDate)
+     private function generateSummaryReport($user, $startDate, $endDate)
     {
-        $query = $tenant->transactions()
+        $query = $user->transactions()
             ->whereBetween('transaction_date', [$startDate, $endDate]);
 
         if ($this->categoryId) {
@@ -158,8 +159,8 @@ class ReportManager extends Component
             $categoryBreakdown[$type] = $transactions
                 ->where('type', $type)
                 ->groupBy('category_id')
-                ->map(function ($items, $categoryId) use ($tenant, $type, $totalIncome, $totalExpenses) {
-                    $category = $tenant->categories()->find($categoryId);
+                ->map(function ($items, $categoryId) use ($user, $type, $totalIncome, $totalExpenses) {
+                    $category = $user->categories()->find($categoryId);
                     return [
                         'category_name' => $category ? $category->name : 'Sem Categoria',
                         'category_icon' => $category ? $category->icon : 'help',
@@ -181,7 +182,7 @@ class ReportManager extends Component
             $monthStart = now()->subMonths($i)->startOfMonth();
             $monthEnd = now()->subMonths($i)->endOfMonth();
             
-            $monthTransactions = $tenant->transactions()
+            $monthTransactions = $user->transactions()
                 ->whereBetween('transaction_date', [$monthStart, $monthEnd])
                 ->get();
 
@@ -198,8 +199,8 @@ class ReportManager extends Component
         $topTransactions = $transactions
             ->sortByDesc('amount')
             ->take(10)
-            ->map(function ($transaction) use ($tenant) {
-                $category = $tenant->categories()->find($transaction->category_id);
+            ->map(function ($transaction) use ($user) {
+                $category = $user->categories()->find($transaction->category_id);
                 return [
                     'id' => $transaction->id,
                     'description' => $transaction->description,
@@ -232,13 +233,13 @@ class ReportManager extends Component
     }
 
 
-    private function generateCategoryReport($tenant, $startDate, $endDate)
+    private function generateCategoryReport($user, $startDate, $endDate)
     {
-        $categories = $tenant->categories()->get();
+        $categories = $user->categories()->get();
         $categoryData = [];
 
         foreach ($categories as $category) {
-            $transactions = $tenant->transactions()
+            $transactions = $user->transactions()
                 ->where('category_id', $category->id)
                 ->whereBetween('transaction_date', [$startDate, $endDate])
                 ->get();
@@ -252,7 +253,7 @@ class ReportManager extends Component
                     $monthStart = now()->subMonths($i)->startOfMonth();
                     $monthEnd = now()->subMonths($i)->endOfMonth();
                     
-                    $monthTotal = $tenant->transactions()
+                    $monthTotal = $user->transactions()
                         ->where('category_id', $category->id)
                         ->whereBetween('transaction_date', [$monthStart, $monthEnd])
                         ->sum('amount');
@@ -287,9 +288,9 @@ class ReportManager extends Component
         return collect($categoryData)->sortByDesc('total')->values();
     }
 
-    private function generateGoalsReport($tenant, $startDate, $endDate)
+    private function generateGoalsReport($user, $startDate, $endDate)
     {
-        $goals = $tenant->goals()
+        $goals = $user->goals()
             ->whereDate('start_date', '<=', $endDate)
             ->whereDate('end_date', '>=', $startDate)
             ->get();
@@ -298,7 +299,7 @@ class ReportManager extends Component
         foreach ($goals as $goal) {
             $goal->calculateProgress();
             
-            $category = $goal->category_id ? $tenant->categories()->find($goal->category_id) : null;
+            $category = $goal->category_id ? $user->categories()->find($goal->category_id) : null;
             
             $goalsData[] = [
                 'id' => $goal->id,
@@ -334,17 +335,17 @@ class ReportManager extends Component
         ];
     }
 
-    private function generateComparisonReport($tenant, $startDate, $endDate)
+    private function generateComparisonReport($user, $startDate, $endDate)
     {
         // Período atual
-        $currentPeriod = $this->generateSummaryReport($tenant, $startDate, $endDate);
+        $currentPeriod = $this->generateSummaryReport($user, $startDate, $endDate);
         
         // Período anterior (mesmo intervalo)
         $daysDiff = Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate));
         $previousStart = Carbon::parse($startDate)->subDays($daysDiff + 1)->startOfDay();
         $previousEnd = Carbon::parse($startDate)->subDay()->endOfDay();
         
-        $previousPeriod = $this->generateSummaryReport($tenant, $previousStart, $previousEnd);
+        $previousPeriod = $this->generateSummaryReport($user, $previousStart, $previousEnd);
 
         // Calcular diferenças
         $incomeChange = $previousPeriod['summary']['total_income'] > 0 
@@ -377,8 +378,8 @@ class ReportManager extends Component
         // $tenant = Tenant::find(auth()->id());
         // $categories = Auth::user()->categories()->orderBy('name')->get();        $categories = Auth::user()->categories()->orderBy('name')->get();
 
-           $tenant = Tenant::where('id', auth()->id())->first();
-        $categories = $tenant ? $tenant->categories()->orderBy('name')->get() : collect();
+           $user = User::where('id', auth()->id())->first();
+        $categories = $user ? $user->categories()->orderBy('name')->get() : collect();
         return view('livewire.report-manager', [
             'categories' => $categories
         ])->layout('components.layouts.perfic-layout', [

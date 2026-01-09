@@ -11,7 +11,7 @@ class Goal extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'type',
         'category_id',
         'name',
@@ -34,9 +34,9 @@ class Goal extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function category()
@@ -52,9 +52,9 @@ class Goal extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }
@@ -100,7 +100,7 @@ class Goal extends Model
     {
         $periodDates = $this->getCurrentPeriodDates();
 
-        return $this->tenant
+        return $this->user
             ->transactions()
             ->expense()
             ->whereBetween('transaction_date', $periodDates)
@@ -114,12 +114,12 @@ class Goal extends Model
     {
         $periodDates = $this->getCurrentPeriodDates();
 
-        $income = $this->tenant->transactions()
+        $income = $this->user->transactions()
             ->income()
             ->whereBetween('transaction_date', $periodDates)
             ->sum('amount');
 
-        $expenses = $this->tenant->transactions()
+        $expenses = $this->user->transactions()
             ->expense()
             ->whereBetween('transaction_date', $periodDates)
             ->sum('amount');
@@ -133,7 +133,7 @@ class Goal extends Model
 
         $periodDates = $this->getCurrentPeriodDates();
 
-        return $this->tenant
+        return $this->user
             ->transactions()
             ->where('category_id', $this->category_id)
             ->whereBetween('transaction_date', $periodDates)
@@ -144,7 +144,7 @@ class Goal extends Model
     {
         $periodDates = $this->getCurrentPeriodDates();
 
-        return $this->tenant
+        return $this->user
             ->transactions()
             ->income()
             ->whereBetween('transaction_date', $periodDates)

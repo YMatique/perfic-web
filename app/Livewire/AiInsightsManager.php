@@ -4,20 +4,20 @@ namespace App\Livewire;
 
 use App\Models\AiInsight;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Services\AiAnalyzer;
 use App\Traits\WithToast;
 use Livewire\Component;
 
 class AiInsightsManager extends Component
 {
-     use WithToast;
+    use WithToast;
 
     public $insights = [];
     public $financialScore = null;
     public $userProfile = '';
     public $loading = false;
-    public $filter = 'all'; // all, unread, high_impact
-
+    public $filter = 'all';  // all, unread, high_impact
     public $title = 'Insights de IA';
     public $pageTitle = 'Insights';
 
@@ -32,29 +32,28 @@ class AiInsightsManager extends Component
         $this->loading = true;
 
         try {
-            $tenant = Tenant::find(auth()->id());
-            
-            if (!$tenant) {
-                $this->error('Tenant não encontrado');
+            $user = User::find(auth()->id());
+
+            if (!$user) {
+                $this->error('User não encontrado');
                 return;
             }
 
             $analyzer = new AiAnalyzer();
-            
+
             // Gerar novos insights
-            $newInsights = $analyzer->generateInsights($tenant);
-            
+            $newInsights = $analyzer->generateInsights($user);
+
             // Detectar perfil do usuário
-            $this->userProfile = $analyzer->detectUserProfile($tenant);
-            
-            $this->success("✨ {$newInsights->count()} novos insights gerados!");
-            
+            $this->userProfile = $analyzer->detectUserProfile($user);
+
+            $this->toastSuccess("{$newInsights->count()} novos insights gerados!");
+
             // Recarregar dados
             $this->loadInsights();
             $this->loadFinancialScore();
-
         } catch (\Exception $e) {
-            $this->error('Erro ao gerar insights: ' . $e->getMessage());
+            $this->toastError('Erro ao gerar insights: ' . $e->getMessage());
         }
 
         $this->loading = false;
@@ -62,13 +61,13 @@ class AiInsightsManager extends Component
 
     public function loadInsights()
     {
-        $tenant = Tenant::find(auth()->id());
-        
-        if (!$tenant) {
+        $user = User::find(auth()->id());
+
+        if (!$user) {
             return;
         }
 
-        $query = $tenant->aiInsights()->latest();
+        $query = $user->aiInsights()->latest();
 
         // Aplicar filtros
         if ($this->filter === 'unread') {
@@ -81,18 +80,19 @@ class AiInsightsManager extends Component
 
         // Detectar perfil
         $analyzer = new AiAnalyzer();
-        $this->userProfile = $analyzer->detectUserProfile($tenant);
+        $this->userProfile = $analyzer->detectUserProfile($user);
     }
 
     public function loadFinancialScore()
     {
-        $tenant = Tenant::find(auth()->id());
-        
-        if (!$tenant) {
+        $user = User::find(auth()->id());
+
+        if (!$user) {
             return;
         }
 
-        $this->financialScore = $tenant->financialScores()
+        $this->financialScore = $user
+            ->financialScores()
             ->where('calculated_for_month', now()->format('Y-m-01'))
             ->latest('calculated_at')
             ->first();
@@ -101,8 +101,8 @@ class AiInsightsManager extends Component
     public function markAsRead($insightId)
     {
         $insight = AiInsight::find($insightId);
-        
-        if ($insight && $insight->tenant_id == auth()->id()) {
+
+        if ($insight && $insight->user_id == auth()->id()) {
             $insight->update(['is_read' => true]);
             $this->loadInsights();
         }
@@ -110,10 +110,10 @@ class AiInsightsManager extends Component
 
     public function markAllAsRead()
     {
-        AiInsight::where('tenant_id', auth()->id())
+        AiInsight::where('user_id', auth()->id())
             ->where('is_read', false)
             ->update(['is_read' => true]);
-        
+
         $this->success('Todos os insights marcados como lidos');
         $this->loadInsights();
     }
@@ -121,8 +121,8 @@ class AiInsightsManager extends Component
     public function deleteInsight($insightId)
     {
         $insight = AiInsight::find($insightId);
-        
-        if ($insight && $insight->tenant_id == auth()->id()) {
+
+        if ($insight && $insight->user_id == auth()->id()) {
             $insight->delete();
             $this->success('Insight removido');
             $this->loadInsights();
@@ -136,23 +136,29 @@ class AiInsightsManager extends Component
 
     public function getScoreColor($score)
     {
-        if ($score >= 80) return 'green';
-        if ($score >= 60) return 'blue';
-        if ($score >= 40) return 'yellow';
+        if ($score >= 80)
+            return 'green';
+        if ($score >= 60)
+            return 'blue';
+        if ($score >= 40)
+            return 'yellow';
         return 'red';
     }
 
     public function getScoreMessage($score)
     {
-        if ($score >= 80) return 'Excelente! Continue assim! 🎉';
-        if ($score >= 60) return 'Bom trabalho! Pode melhorar um pouco. 👍';
-        if ($score >= 40) return 'No caminho certo. Foco nas recomendações! 💪';
+        if ($score >= 80)
+            return 'Excelente! Continue assim! 🎉';
+        if ($score >= 60)
+            return 'Bom trabalho! Pode melhorar um pouco. 👍';
+        if ($score >= 40)
+            return 'No caminho certo. Foco nas recomendações! 💪';
         return 'Precisa de atenção. Vamos melhorar juntos! 🚀';
     }
 
     public function getImpactIcon($level)
     {
-        return match($level) {
+        return match ($level) {
             'high' => 'error',
             'medium' => 'warning',
             'low' => 'info',
@@ -162,7 +168,7 @@ class AiInsightsManager extends Component
 
     public function getImpactColor($level)
     {
-        return match($level) {
+        return match ($level) {
             'high' => 'text-red-600 dark:text-red-400',
             'medium' => 'text-yellow-600 dark:text-yellow-400',
             'low' => 'text-blue-600 dark:text-blue-400',
@@ -172,7 +178,7 @@ class AiInsightsManager extends Component
 
     public function getTypeLabel($type)
     {
-        return match($type) {
+        return match ($type) {
             'spending_pattern' => 'Padrão de Gasto',
             'anomaly' => 'Anomalia Detectada',
             'trend' => 'Tendência',

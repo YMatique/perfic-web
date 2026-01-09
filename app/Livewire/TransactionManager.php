@@ -67,7 +67,7 @@ class TransactionManager extends Component
             ->orderBy('created_at', 'desc');
 
              if (auth()->check()) {
-            $query->where('tenant_id', auth()->id());
+            $query->where('user_id', auth()->id());
         }
 
         // Apply filters
@@ -129,7 +129,7 @@ class TransactionManager extends Component
 
         try {
             Transaction::create([
-                'tenant_id' => auth()->id(),
+                'user_id' => auth()->id(),
                 'description' => $this->description,
                 'amount' => $this->amount,
                 'type' => $this->type,
@@ -242,7 +242,7 @@ class TransactionManager extends Component
         ->whereBetween('transaction_date', $dateRange);
 
     if (auth()->check()) {
-        $baseQuery->where('tenant_id', auth()->id());
+        $baseQuery->where('user_id', auth()->id());
     }
 
     $totalIncome = (clone $baseQuery)->where('type', 'income')->sum('amount');

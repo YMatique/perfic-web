@@ -13,7 +13,7 @@ class Transaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'category_id',
         'recurring_transaction_id',
         'type',
@@ -37,9 +37,9 @@ class Transaction extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function category()
@@ -55,16 +55,16 @@ class Transaction extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
 
         // Log when transaction is created/updated
         static::created(function ($transaction) {
             Log::info('Transaction created', [
-                'tenant_id' => $transaction->tenant_id,
+                'user_id' => $transaction->user_id,
                 'id' => $transaction->id,
                 'amount' => $transaction->amount,
                 'type' => $transaction->type,

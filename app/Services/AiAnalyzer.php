@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AiInsight;
 use App\Models\FinancialScore;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class AiAnalyzer
@@ -12,29 +13,29 @@ class AiAnalyzer
       /**
      * Gerar todos os insights para um tenant
      */
-    public function generateInsights(Tenant $tenant): Collection
+    public function generateInsights(User $user): Collection
     {
         $insights = collect();
 
         // 1. Análise de padrões de gasto
-        $insights = $insights->merge($this->analyzeSpendingPatterns($tenant));
+        $insights = $insights->merge($this->analyzeSpendingPatterns($user));
 
         // 2. Detecção de anomalias
-        $insights = $insights->merge($this->detectAnomalies($tenant));
+        $insights = $insights->merge($this->detectAnomalies($user));
 
         // 3. Análise de tendências
-        $insights = $insights->merge($this->analyzeTrends($tenant));
+        $insights = $insights->merge($this->analyzeTrends($user));
 
         // 4. Recomendações de economia
-        $insights = $insights->merge($this->generateSavingsRecommendations($tenant));
+        $insights = $insights->merge($this->generateSavingsRecommendations($user));
 
         // 5. Score financeiro
-        $this->calculateFinancialScore($tenant);
+        $this->calculateFinancialScore($user);
 
         // Salvar insights no banco
         foreach ($insights as $insight) {
             AiInsight::create([
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
                 'type' => $insight['type'],
                 'title' => $insight['title'],
                 'message'=>'',
@@ -52,12 +53,12 @@ class AiAnalyzer
     /**
      * Analisar padrões de gastos temporais
      */
-    private function analyzeSpendingPatterns(Tenant $tenant): array
+    private function analyzeSpendingPatterns(User  $user): array
     {
         $insights = [];
         
         // Últimos 3 meses de transações
-        $transactions = $tenant->transactions()
+        $transactions = $user->transactions()
             ->where('type', 'expense')
             ->where('transaction_date', '>=', now()->subMonths(3))
             ->get();
@@ -116,7 +117,7 @@ class AiAnalyzer
             $percentage = ($data['total'] / $totalSpending) * 100;
             
             if ($percentage > 30) {
-                $category = $tenant->categories()->find($categoryId);
+                $category = $user->categories()->find($categoryId);
                 
                 $insights[] = [
                     'type' => 'category_concentration',
@@ -143,16 +144,16 @@ class AiAnalyzer
     /**
      * Detectar anomalias nos gastos
      */
-    private function detectAnomalies(Tenant $tenant): array
+    private function detectAnomalies(User $user): array
     {
         $insights = [];
         
-        $recentTransactions = $tenant->transactions()
+        $recentTransactions = $user->transactions()
             ->where('type', 'expense')
             ->where('transaction_date', '>=', now()->subMonth())
             ->get();
 
-        $historicalTransactions = $tenant->transactions()
+        $historicalTransactions = $user->transactions()
             ->where('type', 'expense')
             ->where('transaction_date', '<', now()->subMonth())
             ->where('transaction_date', '>=', now()->subMonths(6))
@@ -184,7 +185,7 @@ class AiAnalyzer
 
             // Z-score > 2.5 = anomalia (muito acima do normal)
             if ($zScore > 2.5) {
-                $category = $tenant->categories()->find($transaction->category_id);
+                $category = $user->categories()->find($transaction->category_id);
                 $percentAbove = (($transaction->amount - $stats['mean']) / $stats['mean']) * 100;
 
                 $insights[] = [
@@ -216,17 +217,17 @@ class AiAnalyzer
     /**
      * Analisar tendências de crescimento/redução
      */
-    private function analyzeTrends(Tenant $tenant): array
+    private function analyzeTrends(User $user): array
     {
         $insights = [];
 
         // Comparar últimos 3 meses vs 3 meses anteriores
-        $recentPeriod = $tenant->transactions()
+        $recentPeriod = $user->transactions()
             ->where('transaction_date', '>=', now()->subMonths(3))
             ->where('type', 'expense')
             ->get();
 
-        $previousPeriod = $tenant->transactions()
+        $previousPeriod = $user->transactions()
             ->where('transaction_date', '<', now()->subMonths(3))
             ->where('transaction_date', '>=', now()->subMonths(6))
             ->where('type', 'expense')
@@ -248,7 +249,7 @@ class AiAnalyzer
             $percentChange = (($recentAmount - $previousAmount) / $previousAmount) * 100;
 
             if (abs($percentChange) > 30) {
-                $category = $tenant->categories()->find($categoryId);
+                $category = $user->categories()->find($categoryId);
                 $trend = $percentChange > 0 ? 'aumentaram' : 'diminuíram';
                 
                 $insights[] = [
@@ -279,11 +280,11 @@ class AiAnalyzer
     /**
      * Gerar recomendações de economia
      */
-    private function generateSavingsRecommendations(Tenant $tenant): array
+    private function generateSavingsRecommendations(User $user): array
     {
         $insights = [];
 
-        $transactions = $tenant->transactions()
+        $transactions = $user->transactions()
             ->where('transaction_date', '>=', now()->subMonths(3))
             ->where('type', 'expense')
             ->get();
@@ -300,7 +301,7 @@ class AiAnalyzer
 
         // Top 3 categorias com maior gasto
         foreach ($categorySpending->take(3) as $categoryId => $amount) {
-            $category = $tenant->categories()->find($categoryId);
+            $category = $user->categories()->find($categoryId);
             $percentage = ($amount / $totalSpending) * 100;
 
             // Sugerir redução de 20%
@@ -332,11 +333,11 @@ class AiAnalyzer
     /**
      * Calcular score financeiro (0-100)
      */
-    private function calculateFinancialScore(Tenant $tenant): void
+    private function calculateFinancialScore(User $user): void
     {
         $currentMonth = now()->format('Y-m-01');
         
-        $monthTransactions = $tenant->transactions()
+        $monthTransactions = $user->transactions()
             ->where('transaction_date', '>=', $currentMonth)
             ->get();
 
@@ -348,7 +349,7 @@ class AiAnalyzer
         $savingsScore = min($savingsRate * 3, 30); // Max 30 pontos
 
         // Aderência às metas
-        $goals = $tenant->goals()->where('is_active', true)->get();
+        $goals = $user->goals()->where('is_active', true)->get();
         $goalsScore = 0;
         if ($goals->count() > 0) {
             $goalsMetPercentage = $goals->filter(function ($goal) {
@@ -358,7 +359,7 @@ class AiAnalyzer
         }
 
         // Consistência (baixo desvio padrão = consistente)
-        $last3Months = $tenant->transactions()
+        $last3Months = $user->transactions()
             ->where('transaction_date', '>=', now()->subMonths(3))
             ->where('type', 'expense')
             ->get()
@@ -392,7 +393,7 @@ class AiAnalyzer
         // Salvar no banco
         FinancialScore::updateOrCreate(
             [
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
                 'calculated_for_month' => $currentMonth,
             ],
             [
@@ -432,9 +433,9 @@ class AiAnalyzer
     /**
      * Detectar perfil do usuário
      */
-    public function detectUserProfile(Tenant $tenant): string
+    public function detectUserProfile(User $user): string
     {
-        $transactions = $tenant->transactions()
+        $transactions = $user->transactions()
             ->where('transaction_date', '>=', now()->subMonths(3))
             ->get();
 

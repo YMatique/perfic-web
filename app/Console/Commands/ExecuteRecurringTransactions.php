@@ -14,7 +14,7 @@ class ExecuteRecurringTransactions extends Command
      */
     protected $signature = 'perfic:execute-recurring 
                             {--dry-run : Show what would be executed without actually executing}
-                            {--tenant= : Execute only for specific tenant ID}';
+                            {--user= : Execute only for specific user ID}';
 
     /**
      * The console command description.
@@ -29,7 +29,7 @@ class ExecuteRecurringTransactions extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        $tenantId = $this->option('tenant');
+        $userId = $this->option('user');
 
         $this->info('🔄 Checking for due recurring transactions...');
         $this->newLine();
@@ -37,12 +37,12 @@ class ExecuteRecurringTransactions extends Command
         // Build query
         $query = RecurringTransaction::dueForExecution();
         
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-            $this->info("📍 Filtering for tenant ID: {$tenantId}");
+        if ($userId) {
+            $query->where('user_id', $userId);
+            $this->info("📍 Filtering for user ID: {$userId}");
         }
 
-        $dueTransactions = $query->with(['tenant', 'category'])->get();
+        $dueTransactions = $query->with(['user', 'category'])->get();
 
         if ($dueTransactions->isEmpty()) {
             $this->info('✅ No recurring transactions are due for execution.');
@@ -57,7 +57,7 @@ class ExecuteRecurringTransactions extends Command
         foreach ($dueTransactions as $recurring) {
             $tableData[] = [
                 'ID' => $recurring->id,
-                'Tenant' => $recurring->tenant->name ?? 'N/A',
+                'User' => $recurring->user->name ?? 'N/A',
                 'Description' => $recurring->description,
                 'Amount' => $recurring->formatted_amount,
                 'Type' => ucfirst($recurring->type),
@@ -68,7 +68,7 @@ class ExecuteRecurringTransactions extends Command
         }
 
         $this->table([
-            'ID', 'Tenant', 'Description', 'Amount', 'Type', 'Category', 'Due Date', 'Frequency'
+            'ID', 'User', 'Description', 'Amount', 'Type', 'Category', 'Due Date', 'Frequency'
         ], $tableData);
 
         if ($isDryRun) {
@@ -126,8 +126,8 @@ php artisan perfic:execute-recurring --dry-run
 php artisan perfic:execute-recurring
 
 # Executar apenas para um usuário específico
-php artisan perfic:execute-recurring --tenant=123
+php artisan perfic:execute-recurring --user=123
 
 # Combinado - teste para usuário específico
-php artisan perfic:execute-recurring --dry-run --tenant=123
+php artisan perfic:execute-recurring --dry-run --user=123
  */

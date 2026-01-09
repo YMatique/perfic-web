@@ -11,7 +11,7 @@ class BehaviorPattern extends Model
      use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'pattern_type',
         'pattern_key',
         'average_value',
@@ -30,17 +30,17 @@ class BehaviorPattern extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }
@@ -62,34 +62,34 @@ class BehaviorPattern extends Model
     }
 
     // Helper methods
-    public static function analyzePatterns(Tenant $tenant)
+    public static function analyzePatterns(User $user)
     {
         $patterns = [];
         
         // Analyze spending patterns
-        $patterns = array_merge($patterns, static::analyzeSpendingPatterns($tenant));
+        $patterns = array_merge($patterns, static::analyzeSpendingPatterns($user));
         
         // Analyze temporal patterns
-        $patterns = array_merge($patterns, static::analyzeTemporalPatterns($tenant));
+        $patterns = array_merge($patterns, static::analyzeTemporalPatterns($user));
         
         // Analyze category patterns
-        $patterns = array_merge($patterns, static::analyzeCategoryPatterns($tenant));
+        $patterns = array_merge($patterns, static::analyzeCategoryPatterns($user));
         
         return $patterns;
     }
 
-    private static function analyzeSpendingPatterns(Tenant $tenant)
+    private static function analyzeSpendingPatterns(User $user)
     {
         $patterns = [];
         
         // Weekend vs Weekday spending
-        $weekendSpending = $tenant->transactions()
+        $weekendSpending = $user->transactions()
             ->expense()
             ->whereRaw('DAYOFWEEK(transaction_date) IN (1, 7)') // Sunday, Saturday
             ->whereBetween('transaction_date', [now()->subDays(90), now()])
             ->avg('amount');
 
-        $weekdaySpending = $tenant->transactions()
+        $weekdaySpending = $user->transactions()
             ->expense()
             ->whereRaw('DAYOFWEEK(transaction_date) NOT IN (1, 7)')
             ->whereBetween('transaction_date', [now()->subDays(90), now()])
@@ -115,12 +115,12 @@ class BehaviorPattern extends Model
         return $patterns;
     }
 
-    private static function analyzeTemporalPatterns(Tenant $tenant)
+    private static function analyzeTemporalPatterns(User $user)
     {
         $patterns = [];
         
         // Monthly spending trend
-        $monthlySpending = $tenant->transactions()
+        $monthlySpending = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [now()->subMonths(6), now()])
             ->selectRaw('YEAR(transaction_date) as year, MONTH(transaction_date) as month, SUM(amount) as total')
@@ -150,12 +150,12 @@ class BehaviorPattern extends Model
         return $patterns;
     }
 
-    private static function analyzeCategoryPatterns(Tenant $tenant)
+    private static function analyzeCategoryPatterns(User $user)
     {
         $patterns = [];
         
         // Find dominant spending categories
-        $categorySpending = $tenant->transactions()
+        $categorySpending = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [now()->subDays(90), now()])
             ->selectRaw('category_id, SUM(amount) as total, COUNT(*) as count')

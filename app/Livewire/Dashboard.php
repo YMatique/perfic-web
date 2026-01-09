@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Tenant;
+use App\Models\User;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -15,7 +16,6 @@ class Dashboard extends Component
     public $activeGoals = [];
     public $aiInsights = [];
     public $financialScore = null;
-
     public $title = 'Dashboard';
     public $pageTitle = 'Visão Geral';
 
@@ -26,41 +26,42 @@ class Dashboard extends Component
 
     public function loadDashboardData()
     {
-        $tenant = Tenant::find(auth()->id());
-        
-        if (!$tenant) {
+        $user = User::find(auth()->id());
+
+        if (!$user) {
             return;
         }
 
         // 1. Resumo Financeiro (Mês Atual)
-        $this->summaryData = $this->getSummaryData($tenant);
+        $this->summaryData = $this->getSummaryData($user);
 
         // 2. Transações Recentes (Últimas 10)
-        $this->recentTransactions = $this->getRecentTransactions($tenant);
+        $this->recentTransactions = $this->getRecentTransactions($user);
 
         // 3. Tendências Mensais (Últimos 6 meses)
-        $this->monthlyTrends = $this->getMonthlyTrends($tenant);
+        $this->monthlyTrends = $this->getMonthlyTrends($user);
 
         // 4. Top Categorias (Mês Atual)
-        $this->topCategories = $this->getTopCategories($tenant);
+        $this->topCategories = $this->getTopCategories($user);
 
         // 5. Metas Ativas
-        $this->activeGoals = $this->getActiveGoals($tenant);
+        $this->activeGoals = $this->getActiveGoals($user);
 
         // 6. Insights de IA (3 mais recentes não lidos)
-        $this->aiInsights = $this->getAiInsights($tenant);
+        $this->aiInsights = $this->getAiInsights($user);
 
         // 7. Score Financeiro
-        $this->financialScore = $this->getFinancialScore($tenant);
+        $this->financialScore = $this->getFinancialScore($user);
     }
 
-    private function getSummaryData($tenant)
+    private function getSummaryData($user)
     {
         $currentMonth = now()->startOfMonth();
         $lastMonth = now()->subMonth()->startOfMonth();
 
         // Dados do mês atual
-        $currentMonthTransactions = $tenant->transactions()
+        $currentMonthTransactions = $user
+            ->transactions()
             ->whereBetween('transaction_date', [$currentMonth, now()])
             ->get();
 
@@ -69,7 +70,8 @@ class Dashboard extends Component
         $currentBalance = $currentIncome - $currentExpenses;
 
         // Dados do mês passado para comparação
-        $lastMonthTransactions = $tenant->transactions()
+        $lastMonthTransactions = $user
+            ->transactions()
             ->whereBetween('transaction_date', [$lastMonth, $lastMonth->copy()->endOfMonth()])
             ->get();
 
@@ -94,9 +96,10 @@ class Dashboard extends Component
         ];
     }
 
-    private function getRecentTransactions($tenant)
+    private function getRecentTransactions($user)
     {
-        return $tenant->transactions()
+        return $user
+            ->transactions()
             ->with('category')
             ->latest('transaction_date')
             ->take(10)
@@ -115,7 +118,7 @@ class Dashboard extends Component
             });
     }
 
-    private function getMonthlyTrends($tenant)
+    private function getMonthlyTrends($user)
     {
         $trends = [];
 
@@ -123,7 +126,8 @@ class Dashboard extends Component
             $monthStart = now()->subMonths($i)->startOfMonth();
             $monthEnd = now()->subMonths($i)->endOfMonth();
 
-            $monthTransactions = $tenant->transactions()
+            $monthTransactions = $user
+                ->transactions()
                 ->whereBetween('transaction_date', [$monthStart, $monthEnd])
                 ->get();
 
@@ -132,26 +136,27 @@ class Dashboard extends Component
                 'year' => $monthStart->format('Y'),
                 'income' => $monthTransactions->where('type', 'income')->sum('amount'),
                 'expenses' => $monthTransactions->where('type', 'expense')->sum('amount'),
-                'balance' => $monthTransactions->where('type', 'income')->sum('amount') - 
-                           $monthTransactions->where('type', 'expense')->sum('amount'),
+                'balance' => $monthTransactions->where('type', 'income')->sum('amount')
+                    - $monthTransactions->where('type', 'expense')->sum('amount'),
             ];
         }
 
         return $trends;
     }
 
-    private function getTopCategories($tenant)
+    private function getTopCategories($user)
     {
         $currentMonth = now()->startOfMonth();
 
-        $categorySpending = $tenant->transactions()
+        $categorySpending = $user
+            ->transactions()
             ->where('type', 'expense')
             ->whereBetween('transaction_date', [$currentMonth, now()])
             ->with('category')
             ->get()
             ->groupBy('category_id')
-            ->map(function ($transactions, $categoryId) use ($tenant) {
-                $category = $tenant->categories()->find($categoryId);
+            ->map(function ($transactions, $categoryId) use ($user) {
+                $category = $user->categories()->find($categoryId);
                 return [
                     'category_id' => $categoryId,
                     'name' => $category->name ?? 'Sem Categoria',
@@ -173,9 +178,10 @@ class Dashboard extends Component
         });
     }
 
-    private function getActiveGoals($tenant)
+    private function getActiveGoals($user)
     {
-        return $tenant->goals()
+        return $user
+            ->goals()
             ->where('is_active', true)
             ->get()
             ->each(function ($goal) {
@@ -195,9 +201,10 @@ class Dashboard extends Component
             ->take(4);
     }
 
-    private function getAiInsights($tenant)
+    private function getAiInsights($user)
     {
-        return $tenant->aiInsights()
+        return $user
+            ->aiInsights()
             ->where('is_read', false)
             ->latest()
             ->take(3)
@@ -214,9 +221,10 @@ class Dashboard extends Component
             });
     }
 
-    private function getFinancialScore($tenant)
+    private function getFinancialScore($user)
     {
-        return $tenant->financialScores()
+        return $user
+            ->financialScores()
             ->where('calculated_for_month', now()->format('Y-m-01'))
             ->latest('calculated_at')
             ->first();
@@ -224,9 +232,12 @@ class Dashboard extends Component
 
     private function getGoalStatus($percentage)
     {
-        if ($percentage >= 100) return 'completed';
-        if ($percentage >= 75) return 'on_track';
-        if ($percentage >= 50) return 'progress';
+        if ($percentage >= 100)
+            return 'completed';
+        if ($percentage >= 75)
+            return 'on_track';
+        if ($percentage >= 50)
+            return 'progress';
         return 'needs_attention';
     }
 

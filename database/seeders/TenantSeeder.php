@@ -28,33 +28,33 @@ class TenantSeeder extends Seeder
         }
 
         // Verifica se já existe um tenant com esse ID
-        $existingTenant = Tenant::find($user->id);
+        // $existingTenant = Tenant::find($user->id);
 
-        if (!$existingTenant) {
-            // Cria tenant com o mesmo ID do usuário para resolver o foreign key
-            Tenant::create([
-                'id' => $user->id,
-                'uuid' => Str::uuid(),
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password,
-                'email_verified_at' => $user->email_verified_at,
-                'settings' => [
-                    'currency' => 'MZN',
-                    'timezone' => 'Africa/Maputo',
-                    'language' => 'pt_MZ'
-                ]
-            ]);
+        // if (!$existingTenant) {
+        //     // Cria tenant com o mesmo ID do usuário para resolver o foreign key
+        //     Tenant::create([
+        //         'id' => $user->id,
+        //         'uuid' => Str::uuid(),
+        //         'name' => $user->name,
+        //         'email' => $user->email,
+        //         'password' => $user->password,
+        //         'email_verified_at' => $user->email_verified_at,
+        //         'settings' => [
+        //             'currency' => 'MZN',
+        //             'timezone' => 'Africa/Maputo',
+        //             'language' => 'pt_MZ'
+        //         ]
+        //     ]);
 
-            $this->command->info("Tenant criado com ID: {$user->id}");
-        } else {
-            $this->command->info("Tenant já existe com ID: {$user->id}");
-        }
+        //     $this->command->info("Tenant criado com ID: {$user->id}");
+        // } else {
+        //     $this->command->info("Tenant já existe com ID: {$user->id}");
+        // }
 
         // Criar algumas categorias padrão para testar
         $this->createDefaultCategories($user->id);
     }
-    private function createDefaultCategories($tenantId)
+    private function createDefaultCategories($userId)
     {
         $defaultCategories = [
             // Despesas
@@ -107,7 +107,7 @@ class TenantSeeder extends Seeder
         foreach ($defaultCategories as $category) {
             \App\Models\Category::firstOrCreate(
                 [
-                    'tenant_id' => $tenantId,
+                    'user_id' => $userId,
                     'name' => $category['name'],
                     'type' => $category['type']
                 ],
@@ -121,6 +121,6 @@ class TenantSeeder extends Seeder
             );
         }
 
-        $this->command->info("Categorias padrão criadas para tenant ID: {$tenantId}");
+        $this->command->info("Categorias padrão criadas para tenant ID: {$userId}");
     }
 }

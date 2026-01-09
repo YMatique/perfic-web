@@ -7,6 +7,7 @@ use App\Models\Goal;
 use App\Models\RecurringTransaction;
 use App\Models\Tenant;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,21 +18,23 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
+        //mudar tudo, de tenant para user
+
         $this->command->info('📊 Criando dados de demonstração...');
 
         // Definir tenant para demo
-        if ($tenantId = $this->command->option('tenant')) {
-            $tenant = Tenant::find($tenantId);
-            if (!$tenant) {
-                $this->command->error("Tenant com ID {$tenantId} não encontrado!");
+        if ($userId = $this->command->option('user')) {
+            $user = User::find($userId);
+            if (!$user) {
+                $this->command->error("User com ID {$userId} não encontrado!");
                 return;
             }
         } else {
             // Usar o primeiro usuário ou criar um usuário demo
-            $tenant = Tenant::first();
-            if (!$tenant) {
+            $user = User::first();
+            if (!$user) {
                 $this->command->warn('Nenhum usuário encontrado. Criando usuário demo...');
-                $tenant = Tenant::create([
+                $user = User::create([
                     'name' => 'Usuário Demo',
                     'email' => 'demo@perfic.com',
                     'password' => bcrypt('password'),
@@ -40,14 +43,14 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        $this->command->info("👤 Criando dados para: {$tenant->name}");
+        $this->command->info("👤 Criando dados para: {$user->name}");
 
         // Garantir que o usuário tem categorias
-        $categories = Category::where('tenant_id', $tenant->id)->get();
+        $categories = Category::where('user_id', $user->id)->get();
         if ($categories->isEmpty()) {
             $this->command->info('  📁 Usuário não tem categorias. Criando...');
-            $this->call(DefaultCategoriesSeeder::class, false, ['--tenant' => $tenant->id]);
-            $categories = Category::where('tenant_id', $tenant->id)->get();
+            $this->call(DefaultCategoriesSeeder::class, false, ['--user' => $user->id]);
+            $categories = Category::where('user_id', $user->id)->get();
         }
 
         // Separar categorias por tipo
@@ -55,18 +58,18 @@ class DemoDataSeeder extends Seeder
         $expenseCategories = $categories->where('type', 'expense');
 
         $this->command->info('  💰 Criando transações de exemplo...');
-        $this->createDemoTransactions($tenant, $incomeCategories, $expenseCategories);
+        $this->createDemoTransactions($user, $incomeCategories, $expenseCategories);
 
         $this->command->info('  🔄 Criando transações recorrentes...');
-        $this->createRecurringTransactions($tenant, $incomeCategories, $expenseCategories);
+        $this->createRecurringTransactions($user, $incomeCategories, $expenseCategories);
 
         $this->command->info('  🎯 Criando metas financeiras...');
-        $this->createDemoGoals($tenant, $expenseCategories);
+        $this->createDemoGoals($user, $expenseCategories);
 
         $this->command->info('✅ Dados de demonstração criados com sucesso!');
     }
 
-    private function createDemoTransactions($tenant, $incomeCategories, $expenseCategories)
+    private function createDemoTransactions($user, $incomeCategories, $expenseCategories)
     {
         $transactionsData = [];
 
@@ -84,7 +87,7 @@ class DemoDataSeeder extends Seeder
             // Salário mensal
             if ($salarioCategory) {
                 $transactionsData[] = [
-                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
                     'category_id' => $salarioCategory->id,
                     'type' => 'income',
                     'amount' => rand(45000, 55000), // MZN 45,000 - 55,000
@@ -96,7 +99,7 @@ class DemoDataSeeder extends Seeder
             // Freelance ocasional
             if ($freelanceCategory && rand(1, 100) > 60) { // 40% chance
                 $transactionsData[] = [
-                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
                     'category_id' => $freelanceCategory->id,
                     'type' => 'income',
                     'amount' => rand(8000, 25000),
@@ -148,7 +151,7 @@ class DemoDataSeeder extends Seeder
                 
                 if ($category) {
                     $transactionsData[] = [
-                        'tenant_id' => $tenant->id,
+                        'user_id' => $user->id,
                         'category_id' => $category->id,
                         'type' => 'expense',
                         'amount' => rand($template['amount_range'][0], $template['amount_range'][1]),
@@ -169,7 +172,7 @@ class DemoDataSeeder extends Seeder
         $this->command->info("    ✅ " . count($transactionsData) . " transações criadas");
     }
 
-    private function createRecurringTransactions($tenant, $incomeCategories, $expenseCategories)
+    private function createRecurringTransactions($user, $incomeCategories, $expenseCategories)
     {
         $recurringData = [];
 
@@ -177,7 +180,7 @@ class DemoDataSeeder extends Seeder
         $salarioCategory = $incomeCategories->where('name', 'Salário')->first();
         if ($salarioCategory) {
             $recurringData[] = [
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
                 'category_id' => $salarioCategory->id,
                 'type' => 'income',
                 'amount' => 50000,
@@ -201,7 +204,7 @@ class DemoDataSeeder extends Seeder
             $category = $expenseCategories->where('name', $bill['category'])->first();
             if ($category) {
                 $recurringData[] = [
-                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
                     'category_id' => $category->id,
                     'type' => 'expense',
                     'amount' => $bill['amount'],
@@ -218,7 +221,7 @@ class DemoDataSeeder extends Seeder
         $poupancaCategory = $expenseCategories->where('name', 'Poupança')->first();
         if ($poupancaCategory) {
             $recurringData[] = [
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
                 'category_id' => $poupancaCategory->id,
                 'type' => 'expense',
                 'amount' => 5000,
@@ -238,7 +241,7 @@ class DemoDataSeeder extends Seeder
         $this->command->info("    ✅ " . count($recurringData) . " transações recorrentes criadas");
     }
 
-    private function createDemoGoals($tenant, $expenseCategories)
+    private function createDemoGoals($user, $expenseCategories)
     {
         $goalsData = [];
 
@@ -246,7 +249,7 @@ class DemoDataSeeder extends Seeder
         $alimentacaoCategory = $expenseCategories->where('name', 'Alimentação')->first();
         if ($alimentacaoCategory) {
             $goalsData[] = [
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
                 'type' => 'category_limit',
                 'category_id' => $alimentacaoCategory->id,
                 'name' => 'Limite Alimentação - ' . now()->format('F Y'),
@@ -260,7 +263,7 @@ class DemoDataSeeder extends Seeder
 
         // Meta de economia mensal
         $goalsData[] = [
-            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
             'type' => 'savings_target',
             'name' => 'Meta de Economia - ' . now()->format('F Y'),
             'target_amount' => 8000, // MZN 8,000
@@ -272,7 +275,7 @@ class DemoDataSeeder extends Seeder
 
         // Meta anual de poupança
         $goalsData[] = [
-            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
             'type' => 'savings_target',
             'name' => 'Reserva de Emergência 2024',
             'target_amount' => 100000, // MZN 100,000
@@ -284,7 +287,7 @@ class DemoDataSeeder extends Seeder
 
         // Limite geral de gastos mensais
         $goalsData[] = [
-            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
             'type' => 'spending_limit',
             'name' => 'Limite Total - ' . now()->format('F Y'),
             'target_amount' => 35000, // MZN 35,000

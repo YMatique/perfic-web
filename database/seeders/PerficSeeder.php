@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,7 +18,7 @@ class PerficSeeder extends Seeder
         $this->command->newLine();
 
         // Verificar se temos usuários
-        $usersCount = Tenant::count();
+        $usersCount = User::count();
         $this->command->info("👥 Usuários existentes: {$usersCount}");
 
         if ($usersCount === 0) {
@@ -72,7 +73,7 @@ class PerficSeeder extends Seeder
     {
         $this->command->info('👤 Criando usuário demo...');
         
-        $demoUser = Tenant::create([
+        $demoUser = User::create([
             'name' => 'Usuário Demo',
             'email' => 'demo@perfic.com',
             'password' => bcrypt('password'),
@@ -87,23 +88,23 @@ class PerficSeeder extends Seeder
 
     private function runCategories()
     {
-        $tenantOption = $this->getTenantOption();
+        $userOption = $this->getUserOption();
         
         $this->command->info('🏷️ Executando: Categorias Padrão');
-        $this->call(DefaultCategoriesSeeder::class, false, $tenantOption ? ['--tenant' => $tenantOption] : []);
+        $this->call(DefaultCategoriesSeeder::class, false, $userOption ? ['--user' => $userOption] : []);
     }
 
     private function runDemoData()
     {
-        $tenantOption = $this->getTenantOption();
+        $userOption = $this->getUserOption();
         
         $this->command->info('📊 Executando: Dados de Demonstração');
-        $this->call(DemoDataSeeder::class, false, $tenantOption ? ['--tenant' => $tenantOption] : []);
+        $this->call(DemoDataSeeder::class, false, $userOption ? ['--user' => $userOption] : []);
     }
 
-    private function getTenantOption()
+    private function getUserOption()
     {
-        $users = Tenant::all(['id', 'name', 'email']);
+        $users = User::all(['id', 'name', 'email']);
         
         if ($users->count() === 1) {
             $user = $users->first();
@@ -138,7 +139,7 @@ class PerficSeeder extends Seeder
         $this->command->info('📊 Resumo Final:');
         
         // Estatísticas gerais
-        $usersCount = Tenant::count();
+        $usersCount = User::count();
         $categoriesCount = \App\Models\Category::count();
         $transactionsCount = \App\Models\Transaction::count();
         $goalsCount = \App\Models\Goal::count();

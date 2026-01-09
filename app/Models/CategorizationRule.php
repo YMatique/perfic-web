@@ -11,7 +11,7 @@ class CategorizationRule extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'keyword',
         'category_id',
         'confidence',
@@ -33,9 +33,9 @@ class CategorizationRule extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function category()
@@ -46,9 +46,9 @@ class CategorizationRule extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }
@@ -75,13 +75,13 @@ class CategorizationRule extends Model
     }
 
     // Helper methods
-    public static function suggestCategory(Tenant $tenant, $description, $amount = null, $location = null)
+    public static function suggestCategory(User $user, $description, $amount = null, $location = null)
     {
         $description = strtolower(trim($description));
         $suggestions = [];
 
         // Find matching rules
-        $rules = static::where('tenant_id', $tenant->id)
+        $rules = static::where('user_id', $user->id)
             ->active()
             ->orderBy('confidence', 'desc')
             ->orderBy('success_count', 'desc')
@@ -171,7 +171,7 @@ class CategorizationRule extends Model
 
     public static function learnFromTransaction(Transaction $transaction, $userSelectedCategory = null)
     {
-        $tenant = $transaction->tenant;
+        $user = $transaction->user;
         $description = strtolower(trim($transaction->description ?? ''));
 
         if (empty($description)) return;
@@ -183,7 +183,7 @@ class CategorizationRule extends Model
 
         foreach ($keywords as $keyword) {
             // Check if rule already exists
-            $existingRule = static::where('tenant_id', $tenant->id)
+            $existingRule = static::where('user_id', $user->id)
                 ->where('keyword', $keyword)
                 ->where('category_id', $categoryId)
                 ->where('rule_type', 'keyword')
@@ -197,7 +197,7 @@ class CategorizationRule extends Model
             } else {
                 // Create new rule
                 static::create([
-                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
                     'keyword' => $keyword,
                     'category_id' => $categoryId,
                     'confidence' => 0.6,

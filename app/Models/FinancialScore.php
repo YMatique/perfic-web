@@ -11,7 +11,7 @@ class FinancialScore extends Model
      use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'score',
         'score_breakdown',
         'calculated_for_month',
@@ -26,17 +26,17 @@ class FinancialScore extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }
@@ -55,16 +55,16 @@ class FinancialScore extends Model
     }
 
     // Helper methods
-    public static function calculateForTenant(Tenant $tenant, $month = null)
+    public static function calculateForUser(User $user, $month = null)
     {
         $month = $month ?? now()->startOfMonth();
         
         $score = new static();
-        $score->tenant_id = $tenant->id;
+        $score->user_id = $user->id;
         $score->calculated_for_month = $month;
         $score->calculated_at = now();
         
-        $breakdown = $score->calculateScoreBreakdown($tenant, $month);
+        $breakdown = $score->calculateScoreBreakdown($user, $month);
         $score->score_breakdown = $breakdown;
         $score->score = $breakdown['total_score'];
         
@@ -73,22 +73,22 @@ class FinancialScore extends Model
         return $score;
     }
 
-    private function calculateScoreBreakdown(Tenant $tenant, $month)
+    private function calculateScoreBreakdown(User $user, $month)
     {
         $startOfMonth = $month->copy()->startOfMonth();
         $endOfMonth = $month->copy()->endOfMonth();
 
         // 1. Budget Adherence (40 points)
-        $budgetScore = $this->calculateBudgetAdherence($tenant, $startOfMonth, $endOfMonth);
+        $budgetScore = $this->calculateBudgetAdherence($user, $startOfMonth, $endOfMonth);
         
         // 2. Savings Rate (30 points)
-        $savingsScore = $this->calculateSavingsRate($tenant, $startOfMonth, $endOfMonth);
+        $savingsScore = $this->calculateSavingsRate($user, $startOfMonth, $endOfMonth);
         
         // 3. Spending Consistency (20 points)
-        $consistencyScore = $this->calculateSpendingConsistency($tenant, $startOfMonth, $endOfMonth);
+        $consistencyScore = $this->calculateSpendingConsistency($user, $startOfMonth, $endOfMonth);
         
         // 4. App Usage (10 points)
-        $usageScore = $this->calculateAppUsage($tenant, $startOfMonth, $endOfMonth);
+        $usageScore = $this->calculateAppUsage($user, $startOfMonth, $endOfMonth);
 
         return [
             'budget_adherence' => $budgetScore,
@@ -103,9 +103,9 @@ class FinancialScore extends Model
         ];
     }
 
-    private function calculateBudgetAdherence($tenant, $start, $end)
+    private function calculateBudgetAdherence($user, $start, $end)
     {
-        $activeGoals = $tenant->goals()
+        $activeGoals = $user->goals()
             ->active()
             ->where('type', 'spending_limit')
             ->currentPeriod()
@@ -124,14 +124,14 @@ class FinancialScore extends Model
         return round(($averageAdherence / 100) * 40);
     }
 
-    private function calculateSavingsRate($tenant, $start, $end)
+    private function calculateSavingsRate($user, $start, $end)
     {
-        $income = $tenant->transactions()
+        $income = $user->transactions()
             ->income()
             ->whereBetween('transaction_date', [$start, $end])
             ->sum('amount');
 
-        $expenses = $tenant->transactions()
+        $expenses = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [$start, $end])
             ->sum('amount');
@@ -144,10 +144,10 @@ class FinancialScore extends Model
         return round(($savingsRate / 100) * 30);
     }
 
-    private function calculateSpendingConsistency($tenant, $start, $end)
+    private function calculateSpendingConsistency($user, $start, $end)
     {
         // Calculate daily spending variance
-        $dailySpending = $tenant->transactions()
+        $dailySpending = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [$start, $end])
             ->selectRaw('DATE(transaction_date) as date, SUM(amount) as total')
@@ -169,15 +169,15 @@ class FinancialScore extends Model
         return round(($consistencyScore / 100) * 20);
     }
 
-    private function calculateAppUsage($tenant, $start, $end)
+    private function calculateAppUsage($user, $start, $end)
     {
-        $transactionCount = $tenant->transactions()
+        $transactionCount = $user->transactions()
             ->whereBetween('created_at', [$start, $end])
             ->count();
 
-        $goalUsage = $tenant->goals()->active()->count() > 0 ? 3 : 0;
-        $categoryUsage = $tenant->categories()->active()->count() >= 5 ? 2 : 0;
-        $recurringUsage = $tenant->recurringTransactions()->active()->count() > 0 ? 2 : 0;
+        $goalUsage = $user->goals()->active()->count() > 0 ? 3 : 0;
+        $categoryUsage = $user->categories()->active()->count() >= 5 ? 2 : 0;
+        $recurringUsage = $user->recurringTransactions()->active()->count() > 0 ? 2 : 0;
         $transactionUsage = min(3, $transactionCount / 10); // 1 point per 10 transactions, max 3
 
         return $goalUsage + $categoryUsage + $recurringUsage + $transactionUsage;

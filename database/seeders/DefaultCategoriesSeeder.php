@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,17 +17,18 @@ class DefaultCategoriesSeeder extends Seeder
         $this->command->info('🏷️ Criando categorias padrão...');
 
           // Determinar para qual(is) tenant(s) criar as categorias
-        $tenantId = config('seeder.tenant_id');
+          //mudar para usuario
+        $userId = config('seeder.user_id');
         
-        if ($tenantId) {
-            $tenants = Tenant::where('id', $tenantId)->get();
-            if ($tenants->isEmpty()) {
-                $this->command->error("❌ Tenant com ID {$tenantId} não encontrado!");
+        if ($userId) {
+            $users = User::where('id', $userId)->get();
+            if ($users->isEmpty()) {
+                $this->command->error("❌ User com ID {$userId} não encontrado!");
                 return;
             }
         } else {
-            $tenants = Tenant::all();
-            if ($tenants->isEmpty()) {
+            $users = User::all();
+            if ($users->isEmpty()) {
                 $this->command->warn('⚠️ Nenhum usuário encontrado! Registre-se primeiro.');
                 return;
             }
@@ -207,12 +208,12 @@ class DefaultCategoriesSeeder extends Seeder
         //     $this->command->info("👥 Criando categorias para todos os usuários ({$tenants->count()})");
         // }
 
- $totalCreated = 0;
-        foreach ($tenants as $tenant) {
+        $totalCreated = 0;
+        foreach ($users as $user) {
             $created = 0;
             foreach ($defaultCategories as $categoryData) {
                 $category = Category::firstOrCreate([
-                    'tenant_id' => $tenant->id,
+                    'user_id' => $user->id,
                     'name' => $categoryData['name'],
                     'type' => $categoryData['type'],
                 ], [
@@ -228,11 +229,11 @@ class DefaultCategoriesSeeder extends Seeder
                 }
             }
 
-            $this->command->info("  ✅ {$created} categorias criadas para {$tenant->name}");
+            $this->command->info("  ✅ {$created} categorias criadas para {$user->name}");
             $totalCreated += $created;
         }
 
-        $this->command->info("🎉 Total: {$totalCreated} categorias criadas para {$tenants->count()} usuário(s)");
+        $this->command->info("🎉 Total: {$totalCreated} categorias criadas para {$users->count()} usuário(s)");
         
         // Limpar config temporária
         // config()->forget('seeder.tenant_id');

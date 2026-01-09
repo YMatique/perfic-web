@@ -55,7 +55,70 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    // Relationships
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function recurringTransactions()
+    {
+        return $this->hasMany(RecurringTransaction::class);
+    }
+
+    public function goals()
+    {
+        return $this->hasMany(Goal::class);
+    }
+
+    public function financialScores()
+    {
+        return $this->hasMany(FinancialScore::class);
+    }
+
+    public function aiInsights()
+    {
+        return $this->hasMany(AiInsight::class);
+    }
+
+    public function behaviorPatterns()
+    {
+        return $this->hasMany(BehaviorPattern::class);
+    }
+
+    public function categorizationRules()
+    {
+        return $this->hasMany(CategorizationRule::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereNotNull('email_verified_at');
+    }
+
+    // Helper methods
+    public function getCurrentFinancialScore(): int
+    {
+        return $this
+            ->financialScores()
+            ->where('calculated_for_month', now()->format('Y-m-01'))
+            ->latest('calculated_at')
+            ->first()
+            ?->score ?? 0;
+    }
+
+    public function getUnreadInsightsCount(): int
+    {
+        return $this->aiInsights()->where('is_read', false)->count();
     }
 }

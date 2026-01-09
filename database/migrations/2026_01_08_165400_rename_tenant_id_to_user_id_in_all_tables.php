@@ -28,10 +28,8 @@ return new class extends Migration
         
         foreach ($tables as $table) {
             // Drop foreign key constraint
-            $foreignKeyName = "{$table}_tenant_id_foreign";
-            
-            Schema::table($table, function (Blueprint $blueprint) use ($foreignKeyName) {
-                $blueprint->dropForeign([$foreignKeyName]);
+            Schema::table($table, function (Blueprint $blueprint) {
+                $blueprint->dropForeign(['tenant_id']);
             });
             
             // Rename column
@@ -72,8 +70,8 @@ return new class extends Migration
         
         foreach ($tables as $table) {
             // Drop foreign key
-            Schema::table($table, function (Blueprint $blueprint) use ($table) {
-                $blueprint->dropForeign(["{$table}_user_id_foreign"]);
+            Schema::table($table, function (Blueprint $blueprint) {
+                $blueprint->dropForeign(['user_id']);
             });
             
             // Rename column back

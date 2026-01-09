@@ -164,7 +164,7 @@ class GoalManager extends Component
         $this->validate();
 
         $data = [
-            'tenant_id' => auth()->id(),
+            'user_id' => auth()->id(),
             'name' => $this->name,
             'type' => $this->type,
             'category_id' => $this->category_id ?: null,

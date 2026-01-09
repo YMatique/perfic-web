@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('recurring_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            // $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->enum('type', ['income', 'expense']);
             $table->decimal('amount', 10, 2);
@@ -27,7 +28,7 @@ return new class extends Migration
             $table->timestamp('last_execution')->nullable();
             $table->timestamps();
 
-            $table->index(['tenant_id', 'is_active']);
+            $table->index(['user_id', 'is_active']);
             $table->index(['next_execution', 'is_active']);
         });
     }

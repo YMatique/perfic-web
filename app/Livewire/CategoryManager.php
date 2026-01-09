@@ -168,13 +168,13 @@ public $pageTitle = 'Gestão de Categorias';
 
         try {
             Category::create([
-                'tenant_id' => auth()->id(),
+                'user_id' => auth()->id(),
                 'name' => $this->name,
                 'type' => $this->type,
                 'color' => $this->color,
                 'icon' => $this->icon,
                 'is_active' => $this->is_active,
-                'order' => Category::where('tenant_id', auth()->id())->max('order') + 1,
+                'order' => Category::where('user_id', auth()->id())->max('order') + 1,
             ]);
 
             $this->toastSuccess('Categoria criada!', 'A categoria foi criada com sucesso.');

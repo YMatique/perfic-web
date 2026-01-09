@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class PerficSetupCommand extends Command
@@ -15,7 +15,7 @@ class PerficSetupCommand extends Command
     protected $signature = 'perfic:setup 
                             {--categories : Install only default categories}
                             {--demo : Install only demo data}
-                            {--tenant= : Setup only for specific tenant ID}
+                            {--user= : Setup only for specific user ID}
                             {--force : Skip confirmations}';
 
     /**
@@ -34,17 +34,17 @@ class PerficSetupCommand extends Command
 
         $categoriesOnly = $this->option('categories');
         $demoOnly = $this->option('demo');
-        $tenantId = $this->option('tenant');
+        $userId = $this->option('user');
         $force = $this->option('force');
 
         // Determine what to run
         if ($categoriesOnly) {
-            $this->runCategories($tenantId);
+            $this->runCategories($userId);
         } elseif ($demoOnly) {
-            $this->runDemoData($tenantId);
+            $this->runDemoData($userId);
         } else {
             // Full setup
-            $this->runFullSetup($tenantId, $force);
+            $this->runFullSetup($userId, $force);
         }
 
         $this->showFooter();
@@ -62,7 +62,7 @@ class PerficSetupCommand extends Command
         $this->info('');
     }
 
-    private function runCategories($tenantId = null)
+    private function runCategories($userId = null)
     {
         $this->info('🏷️ Instalando categorias padrão...');
 
@@ -71,8 +71,8 @@ class PerficSetupCommand extends Command
         //     '--class' => 'DefaultCategoriesSeeder',
         // ] + $options);
         // Verificar se temos usuários
-        if (! $tenantId) {
-            $usersCount = Tenant::count();
+        if (!$userId) {
+            $usersCount = User::count();
             if ($usersCount === 0) {
                 $this->warn('⚠️ Nenhum usuário encontrado!');
                 if ($this->confirm('Criar usuário demo para teste?', true)) {
@@ -86,15 +86,15 @@ class PerficSetupCommand extends Command
         $seeder->setCommand($this);
         $seeder->setContainer(app());
 
-        if ($tenantId) {
+        if ($userId) {
             // Se especificou tenant, passar via environment/config temporário
-            config(['seeder.tenant_id' => $tenantId]);
+            config(['seeder.user_id' => $userId]);
         }
 
         $seeder->run();
     }
 
-    private function runDemoData($tenantId = null)
+    private function runDemoData($userId = null)
     {
         $this->info('📊 Instalando dados de demonstração...');
 
@@ -106,18 +106,18 @@ class PerficSetupCommand extends Command
         $seeder->setCommand($this);
         $seeder->setContainer(app());
 
-        if ($tenantId) {
-            config(['seeder.tenant_id' => $tenantId]);
+        if ($userId) {
+            config(['seeder.user_id' => $userId]);
         }
 
         $seeder->run();
     }
 
-    private function runFullSetup($tenantId = null, $force = false)
+    private function runFullSetup($userId = null, $force = false)
     {
-        if (! $force) {
+        if (!$force) {
             $this->warn('⚠️ Isso vai criar categorias padrão e dados de exemplo.');
-            if (! $this->confirm('Continuar?', true)) {
+            if (!$this->confirm('Continuar?', true)) {
                 $this->info('❌ Setup cancelado.');
 
                 return;
@@ -125,29 +125,29 @@ class PerficSetupCommand extends Command
         }
 
         // Run categories first
-        $this->runCategories($tenantId);
+        $this->runCategories($userId);
         $this->newLine();
 
         // Then demo data
-        $this->runDemoData($tenantId);
+        $this->runDemoData($userId);
     }
 
-     private function createDemoUser()
+    private function createDemoUser()
     {
         $this->info('👤 Criando usuário demo...');
-        
-        $demoUser = Tenant::create([
+
+        $demoUser = User::create([
             'name' => 'Usuário Demo',
             'email' => 'demo@perfic.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
         ]);
 
-        $this->info("✅ Usuário demo criado:");
-        $this->info("   📧 Email: demo@perfic.com");
-        $this->info("   🔑 Senha: password");
+        $this->info('✅ Usuário demo criado:');
+        $this->info('   📧 Email: demo@perfic.com');
+        $this->info('   🔑 Senha: password');
         $this->newLine();
-        
+
         return $demoUser;
     }
 

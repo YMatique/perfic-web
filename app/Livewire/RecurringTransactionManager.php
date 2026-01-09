@@ -158,7 +158,7 @@ class RecurringTransactionManager extends Component
         $this->validate();
 
         $data = [
-            'tenant_id' => auth()->id(),
+            'user_id' => auth()->id(),
             'description' => $this->description,
             'amount' => $this->amount,
             'type' => $this->type,

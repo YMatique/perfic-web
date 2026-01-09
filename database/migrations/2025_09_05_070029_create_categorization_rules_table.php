@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('categorization_rules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            // $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('keyword');
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->decimal('confidence', 3, 2); // 0.00 to 1.00
@@ -25,9 +26,9 @@ return new class extends Migration
             $table->boolean('is_auto_generated')->default(true); // AI vs user created
             $table->timestamps();
 
-            $table->index(['tenant_id', 'is_active']);
-            $table->index(['keyword', 'tenant_id']);
-            $table->index(['tenant_id', 'confidence']);
+            $table->index(['user_id', 'is_active']);
+            $table->index(['keyword', 'user_id']);
+            $table->index(['user_id', 'confidence']);
         });
     }
 

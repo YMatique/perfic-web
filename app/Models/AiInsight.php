@@ -11,7 +11,7 @@ class AiInsight extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'user_id',
         'type',
         'title',
         'message',
@@ -39,9 +39,9 @@ class AiInsight extends Model
     ];
 
     // Relationships
-    public function tenant()
+    public function user()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(User::class);
     }
 
     public function relatedCategory()
@@ -57,9 +57,9 @@ class AiInsight extends Model
     // Global Scopes
     protected static function booted()
     {
-        static::addGlobalScope('tenant', function (Builder $builder) {
+        static::addGlobalScope('user', function (Builder $builder) {
             if (auth()->check()) {
-                $builder->where('tenant_id', auth()->id());
+                $builder->where('user_id', auth()->id());
             }
         });
     }
@@ -105,37 +105,37 @@ class AiInsight extends Model
 
 
     // Helper methods
-    public static function generateInsights(Tenant $tenant)
+    public static function generateInsights(User $user)
     {
         $insights = [];
         
         // Generate goal-related insights
-        $insights = array_merge($insights, static::generateGoalInsights($tenant));
+        $insights = array_merge($insights, static::generateGoalInsights($user));
         
         // Generate spending pattern insights
-        $insights = array_merge($insights, static::generateSpendingInsights($tenant));
+        $insights = array_merge($insights, static::generateSpendingInsights($user));
         
         // Generate savings insights
-        $insights = array_merge($insights, static::generateSavingsInsights($tenant));
+        $insights = array_merge($insights, static::generateSavingsInsights($user));
         
         // Generate anomaly insights
-        $insights = array_merge($insights, static::generateAnomalyInsights($tenant));
+        $insights = array_merge($insights, static::generateAnomalyInsights($user));
         
         // Create insights in database
         foreach ($insights as $insightData) {
             static::create(array_merge([
-                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
             ], $insightData));
         }
         
         return count($insights);
     }
 
-    private static function generateGoalInsights(Tenant $tenant)
+    private static function generateGoalInsights(User $user)
     {
         $insights = [];
         
-        $goals = $tenant->goals()->active()->currentPeriod()->get();
+        $goals = $user->goals()->active()->currentPeriod()->get();
         
         foreach ($goals as $goal) {
             $goal->calculateProgress();
@@ -171,12 +171,12 @@ class AiInsight extends Model
         return $insights;
     }
 
-    private static function generateSpendingInsights(Tenant $tenant)
+    private static function generateSpendingInsights(User $user)
     {
         $insights = [];
         
         // Compare this month vs last month
-        $thisMonth = $tenant->transactions()
+        $thisMonth = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [
                 now()->startOfMonth(),
@@ -184,7 +184,7 @@ class AiInsight extends Model
             ])
             ->sum('amount');
 
-        $lastMonth = $tenant->transactions()
+        $lastMonth = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [
                 now()->subMonth()->startOfMonth(),
@@ -223,12 +223,12 @@ class AiInsight extends Model
         return $insights;
     }
 
-    private static function generateSavingsInsights(Tenant $tenant)
+    private static function generateSavingsInsights(User $user)
     {
         $insights = [];
         
         // Calculate savings rate
-        $income = $tenant->transactions()
+        $income = $user->transactions()
             ->income()
             ->whereBetween('transaction_date', [
                 now()->startOfMonth(),
@@ -236,7 +236,7 @@ class AiInsight extends Model
             ])
             ->sum('amount');
 
-        $expenses = $tenant->transactions()
+        $expenses = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [
                 now()->startOfMonth(),
@@ -274,17 +274,17 @@ class AiInsight extends Model
         return $insights;
     }
 
-    private static function generateAnomalyInsights(Tenant $tenant)
+    private static function generateAnomalyInsights(User $user)
     {
         $insights = [];
         
         // Detect unusual spending patterns
-        $recentTransactions = $tenant->transactions()
+        $recentTransactions = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [now()->subDays(7), now()])
             ->get();
 
-        $averageTransaction = $tenant->transactions()
+        $averageTransaction = $user->transactions()
             ->expense()
             ->whereBetween('transaction_date', [now()->subDays(90), now()->subDays(7)])
             ->avg('amount');

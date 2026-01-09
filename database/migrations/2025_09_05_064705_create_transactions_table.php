@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            // $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->foreignId('recurring_transaction_id')->nullable()->constrained('recurring_transactions')->onDelete('set null');
             $table->enum('type', ['income', 'expense']);
@@ -28,9 +29,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['tenant_id', 'transaction_date']);
-            $table->index(['tenant_id', 'category_id', 'transaction_date']);
-            $table->index(['tenant_id', 'type', 'transaction_date']);
+            $table->index(['user_id', 'transaction_date']);
+            $table->index(['user_id', 'category_id', 'transaction_date']);
+            $table->index(['user_id', 'type', 'transaction_date']);
             $table->index(['transaction_date']); // for analytics
         });
     }
