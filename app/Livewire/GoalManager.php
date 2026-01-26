@@ -103,10 +103,12 @@ class GoalManager extends Component
             } elseif ($this->filterStatus === 'inactive') {
                 $query->where('is_active', false);
             } elseif ($this->filterStatus === 'completed') {
-                $query->where('is_active', true)
+                $query
+                    ->where('is_active', true)
                     ->whereRaw('current_progress >= target_amount');
             } elseif ($this->filterStatus === 'warning') {
-                $query->where('is_active', true)
+                $query
+                    ->where('is_active', true)
                     ->whereRaw('(current_progress / target_amount) >= 0.8')
                     ->whereRaw('current_progress < target_amount');
             }
@@ -177,10 +179,10 @@ class GoalManager extends Component
 
         if ($this->editingGoal) {
             $this->editingGoal->update($data);
-            $this->success('Meta atualizada com sucesso!');
+            $this->toastSuccess('Meta atualizada com sucesso!');
         } else {
             Goal::create($data);
-            $this->success('Meta criada com sucesso!');
+            $this->toastSuccess('Meta criada com sucesso!');
         }
 
         $this->cancelForm();
@@ -190,22 +192,22 @@ class GoalManager extends Component
     public function delete(Goal $goal)
     {
         $goal->delete();
-        $this->success('Meta excluída com sucesso!');
+        $this->toastSuccess('Meta excluída com sucesso!');
         $this->loadGoals();
     }
 
     public function toggleStatus(Goal $goal)
     {
-        $goal->update(['is_active' => ! $goal->is_active]);
+        $goal->update(['is_active' => !$goal->is_active]);
         $status = $goal->is_active ? 'ativada' : 'desativada';
-        $this->success("Meta {$status} com sucesso!");
+        $this->toastSuccess("Meta {$status} com sucesso!");
         $this->loadGoals();
     }
 
     public function calculateProgress(Goal $goal)
     {
         $goal->calculateProgress();
-        $this->success('Progresso recalculado!');
+        $this->toastSuccess('Progresso recalculado!');
         $this->loadGoals();
     }
 
@@ -219,8 +221,14 @@ class GoalManager extends Component
     public function resetForm()
     {
         $this->reset([
-            'name', 'type', 'category_id', 'target_amount',
-            'period', 'start_date', 'end_date', 'is_active',
+            'name',
+            'type',
+            'category_id',
+            'target_amount',
+            'period',
+            'start_date',
+            'end_date',
+            'is_active',
         ]);
         $this->start_date = now()->startOfMonth()->format('Y-m-d');
         $this->end_date = now()->endOfMonth()->format('Y-m-d');
@@ -231,7 +239,7 @@ class GoalManager extends Component
 
     public function getGoalStatusColor($goal)
     {
-        if (! $goal->is_active) {
+        if (!$goal->is_active) {
             return 'gray';
         }
 
@@ -247,7 +255,7 @@ class GoalManager extends Component
 
     public function getGoalStatusIcon($goal)
     {
-        if (! $goal->is_active) {
+        if (!$goal->is_active) {
             return 'pause_circle';
         }
 
@@ -263,7 +271,7 @@ class GoalManager extends Component
 
     public function getGoalStatusText($goal)
     {
-        if (! $goal->is_active) {
+        if (!$goal->is_active) {
             return 'Inativa';
         }
 
